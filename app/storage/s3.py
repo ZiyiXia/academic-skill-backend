@@ -125,6 +125,16 @@ class S3Storage:
     async def list_keys_async(self, prefix: str) -> list[str]:
         return await asyncio.to_thread(self.list_keys, prefix)
 
+    def presign_get_url(self, key: str, expires_in_seconds: int = 1800) -> str:
+        return self.client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": self.bucket, "Key": key},
+            ExpiresIn=expires_in_seconds,
+        )
+
+    async def presign_get_url_async(self, key: str, expires_in_seconds: int = 1800) -> str:
+        return await asyncio.to_thread(self.presign_get_url, key, expires_in_seconds)
+
     def list_keys(self, prefix: str) -> list[str]:
         paginator = self.client.get_paginator("list_objects_v2")
         keys: list[str] = []

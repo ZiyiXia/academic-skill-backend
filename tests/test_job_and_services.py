@@ -59,6 +59,9 @@ class FakeStorage:
     async def list_keys_async(self, prefix: str) -> list[str]:
         return self.list_keys(prefix)
 
+    async def presign_get_url_async(self, key: str, expires_in_seconds: int = 1800) -> str:
+        return f"https://example.com/download/{key}?expires={expires_in_seconds}"
+
 
 def build_settings() -> Settings:
     return Settings(
@@ -199,6 +202,33 @@ async def test_blog_cached_result_short_circuits_generation():
     assert created.status == "succeeded"
     detail = await service.get_job(created.job_id)
     assert detail.result["markdown_s3_key"] == keys["blog_markdown"]
+
+
+@pytest.mark.asyncio
+async def test_blog_result_returns_presigned_download_url():
+    settings = build_settings()
+    storage = FakeStorage()
+    jobs = JobService(storage, settings)
+    service = BlogService(settings, storage, jobs)
+    generated_at = datetime.now(timezone.utc).isoformat()
+    meta = jobs.create_meta(
+        "blog",
+        "1234.5678",
+        status="succeeded",
+        progress=100,
+        stage="complete",
+        result={
+            "paper_id": "1234.5678",
+            "generated_at": generated_at,
+            "markdown_s3_key": "deepxiv/blogs/1234.5678/blog/blog.md",
+        },
+    )
+    jobs.save_meta(meta)
+
+    result = await service.get_result(meta.job_id)
+    assert result.paper_id == "1234.5678"
+    assert result.expires_in_seconds == 1800
+    assert result.download_url.endswith("deepxiv/blogs/1234.5678/blog/blog.md?expires=1800")
 
 
 @pytest.mark.asyncio

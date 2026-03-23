@@ -12,7 +12,7 @@ class ResearchRequest(BaseModel):
     query: str = Field(min_length=1)
     context: Optional[dict[str, Any]] = None
     history: list[ResearchMessage] = Field(default_factory=list)
-    max_iterations: int = Field(default=4, ge=1, le=8)
+    max_iterations: int = Field(default=5, ge=1, le=8)
     search_top_k: int = Field(default=5, ge=1, le=10)
     include_trace: bool = True
 

@@ -365,4 +365,12 @@ class BlogService:
         meta = self.jobs.load_meta("blog", job_id)
         if meta.status != "succeeded" or not meta.result:
             raise HTTPException(status_code=409, detail="Blog result is not ready")
-        return BlogResultResponse.model_validate(meta.result)
+        markdown_s3_key = meta.result.get("markdown_s3_key")
+        if not markdown_s3_key:
+            raise HTTPException(status_code=500, detail="Blog result is missing markdown storage key")
+        return BlogResultResponse(
+            paper_id=meta.result["paper_id"],
+            generated_at=datetime.fromisoformat(meta.result["generated_at"]) if meta.result.get("generated_at") else None,
+            download_url=await self.storage.presign_get_url_async(markdown_s3_key, expires_in_seconds=1800),
+            expires_in_seconds=1800,
+        )

@@ -9,33 +9,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-import boto3
 import httpx
 
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-
-from app.core.config import get_settings
-
-
-def build_s3_client():
-    settings = get_settings()
-    kwargs: dict[str, Any] = {"service_name": "s3", "region_name": settings.s3_region}
-    if settings.s3_endpoint:
-        kwargs["endpoint_url"] = settings.s3_endpoint
-    if settings.s3_access_key and settings.s3_secret_key:
-        kwargs["aws_access_key_id"] = settings.s3_access_key
-        kwargs["aws_secret_access_key"] = settings.s3_secret_key
-    return boto3.client(**kwargs), settings.s3_bucket
-
-
-def download_s3_text(key: str) -> str:
-    client, bucket = build_s3_client()
-    obj = client.get_object(Bucket=bucket, Key=key)
-    return obj["Body"].read().decode("utf-8")
-
 
 def poll_job(base_url: str, job_id: str, interval_sec: int, timeout_sec: int) -> dict[str, Any]:
     started = time.time()
@@ -68,18 +47,12 @@ def save_outputs(result_payload: dict[str, Any], output_root: Path) -> dict[str,
     output_dir = output_root / f"{timestamp}_{paper_id}"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    markdown_key = result_payload["markdown_s3_key"]
-    meta_key = result_payload.get("meta_s3_key")
-
-    markdown = download_s3_text(markdown_key)
+    with httpx.Client(timeout=300.0) as client:
+        response = client.get(result_payload["download_url"])
+        response.raise_for_status()
+        markdown = response.text
     markdown_path = output_dir / "blog.md"
     markdown_path.write_text(markdown, encoding="utf-8")
-
-    meta_path = None
-    if meta_key:
-        meta_text = download_s3_text(meta_key)
-        meta_path = output_dir / "blog_meta.json"
-        meta_path.write_text(meta_text, encoding="utf-8")
 
     result_path = output_dir / "result.json"
     result_path.write_text(json.dumps(result_payload, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -87,7 +60,6 @@ def save_outputs(result_payload: dict[str, Any], output_root: Path) -> dict[str,
     return {
         "output_dir": str(output_dir),
         "markdown": str(markdown_path),
-        "meta": str(meta_path) if meta_path else "",
         "result_json": str(result_path),
     }
 

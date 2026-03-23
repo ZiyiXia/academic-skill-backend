@@ -104,7 +104,7 @@ curl -X POST http://127.0.0.1:8010/v1/search/papers \
 ```bash
 curl -X POST http://127.0.0.1:8010/v1/research \
   -H 'Content-Type: application/json' \
-  -d '{"query":"multimodal world model papers","max_iterations":4,"search_top_k":5,"include_trace":true}'
+  -d '{"query":"multimodal world model papers","max_iterations":5,"search_top_k":5,"include_trace":true}'
 ```
 
 ### 3) 创建 blog 任务
@@ -114,6 +114,68 @@ curl -X POST http://127.0.0.1:8010/v1/blog/jobs \
   -H 'Content-Type: application/json' \
   -d '{"paper_id":"1706.03762","force":false}'
 ```
+
+返回示例：
+
+```json
+{
+  "job_id": "c8b8f7...",
+  "job_type": "blog",
+  "status": "queued",
+  "progress": 0,
+  "stage": null,
+  "message": null,
+  "upstream_progress": null
+}
+```
+
+轮询：
+
+```bash
+curl http://127.0.0.1:8010/v1/blog/jobs/<job_id>
+```
+
+返回示例：
+
+```json
+{
+  "job_id": "c8b8f7...",
+  "job_type": "blog",
+  "paper_id": "1706.03762",
+  "status": "running",
+  "progress": 5,
+  "stage": "blog_generate",
+  "message": "Generating blog markdown",
+  "upstream_progress": null,
+  "error_message": null,
+  "result": null,
+  "created_at": "2026-03-23T03:00:00Z",
+  "updated_at": "2026-03-23T03:01:00Z"
+}
+```
+
+最终结果：
+
+```bash
+curl http://127.0.0.1:8010/v1/blog/jobs/<job_id>/result
+```
+
+返回示例：
+
+```json
+{
+  "paper_id": "1706.03762",
+  "generated_at": "2026-03-23T03:05:00Z",
+  "download_url": "https://...",
+  "expires_in_seconds": 1800
+}
+```
+
+说明：
+
+- `download_url` 是 `blog.md` 的临时下载链接
+- 默认有效期 `30` 分钟
+- 无论是新生成成功，还是命中 S3 已有 blog，`/result` 都统一返回这个链接
 
 ### 4) 创建 PPT 任务
 
@@ -127,7 +189,9 @@ curl -X POST http://127.0.0.1:8010/v1/ppt/jobs \
 
 - Research：`python scripts/test_research.py`
 - Research live：`python scripts/test_research.py --live --timeout 600`
+- Research live 默认使用：`max_iterations=5`、`search_top_k=5`
 - Blog job：`python scripts/test_blog_job.py --paper-id 2603.10165 --force`
+- Blog job 成功后会通过 `/result` 返回的临时下载链接拉取 `blog.md` 到本地
 - PPT job：`python scripts/test_ppt_job.py --paper-id 2603.10165 --slide-count 5 --force`
 - S3 大对象探测：`python scripts/test_s3_large_upload.py --size-mb 20`
 

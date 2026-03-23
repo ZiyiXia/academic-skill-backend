@@ -209,8 +209,8 @@ async def run_mock_test(query: str) -> int:
 async def run_live_test(query: str, base_url: str, timeout_sec: float, output_dir: Path) -> int:
     payload = {
         "query": query,
-        "max_iterations": 2,
-        "search_top_k": 3,
+        "max_iterations": 5,
+        "search_top_k": 5,
         "include_trace": True,
     }
     async with httpx.AsyncClient(timeout=timeout_sec) as client:

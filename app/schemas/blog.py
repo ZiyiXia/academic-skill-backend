@@ -6,7 +6,6 @@ from pydantic import BaseModel
 
 class BlogResultResponse(BaseModel):
     paper_id: str
-    markdown: str
     generated_at: Optional[datetime] = None
-    markdown_s3_key: str
-    meta_s3_key: Optional[str] = None
+    download_url: str
+    expires_in_seconds: int = 1800
