@@ -1,0 +1,532 @@
+{
+  "status": "success",
+  "message": "Generated research report for query: I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.",
+  "report": {
+    "query": "I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.",
+    "title": "Research Report: I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.",
+    "executive_summary": "2601.05461: Existing benchmarks treat multi-turn conversation and reasoning-intensive retrieval separately, yet real-world information seeking requires both. To bridge this gap, we present a benchmark for reasoning-based conversatio",
+    "key_findings": [
+      "2601.05461: Existing benchmarks treat multi-turn conversation and reasoning-intensive retrieval separately, yet real-world information seeking requires both. To bridge this gap, we present a benchmark for reasoning-based conversatio",
+      "2505.19978: Recent advances in conversational AI have demonstrated impressive capabilities in single-turn responses, yet multi-turn dialogues remain challenging for even the most sophisticated language models. Current dialogue datas",
+      "2410.23090: Retrieval-Augmented Generation (RAG) has become a powerful paradigm for enhancing large language models (LLMs) through external knowledge retrieval. Despite its widespread attention, existing academic research predominan",
+      "2411.07439: A conversational music retrieval system can help users discover music that matches their preferences through dialogue. To achieve this, a conversational music retrieval system should seamlessly engage in multi-turn conve",
+      "2305.15294: Large language models are powerful text processors and reasoners, but are still subject to limitations including outdated knowledge and hallucinations, which necessitates connecting them to the world. Retrieval-augmented",
+      "2302.00083: Retrieval-Augmented Language Modeling (RALM) methods, which condition a language model (LM) on relevant documents from a grounding corpus during generation, were shown to significantly improve language modeling performan"
+    ],
+    "sections": [
+      {
+        "heading": "Question and Scope",
+        "content": "The user asks: I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.\n\nThe working goal for this run is: Investigate the research question: I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.. The analysis below uses retrieved papers and any successful paper inspections to identify the strongest candidates, explain why they matter, and separate promising options from weaker or older alternatives."
+      },
+      {
+        "heading": "Candidate Landscape",
+        "content": "RECOR: Reasoning-focused Multi-turn Conversational Retrieval Benchmark (2601.05461, 2026-01-09) is relevant because Existing benchmarks treat multi-turn conversation and reasoning-intensive retrieval separately, yet real-world information seeking requires both. To bridge this gap, we present a benchmark for reasoning-based conversational information retrieval comprising 707 conversations (2,971 turns) across eleven domains. To ensure quality, our Decomposition-and-Verific\n\nDeepDialogue: A Multi-Turn Emotionally-Rich Spoken Dialogue Dataset (2505.19978, 2025-05-26T13:37:10Z) is relevant because Recent advances in conversational AI have demonstrated impressive capabilities in single-turn responses, yet multi-turn dialogues remain challenging for even the most sophisticated language models. Current dialogue datasets are limited in their emotional range, domain diversity, turn depth, and are predominantly text-only, hindering progress in developing mo\n\nCORAL: Benchmarking Multi-turn Conversational Retrieval-Augmentation Generation (2410.23090, 2024-10-30T15:06:32Z) is relevant because Retrieval-Augmented Generation (RAG) has become a powerful paradigm for enhancing large language models (LLMs) through external knowledge retrieval. Despite its widespread attention, existing academic research predominantly focuses on single-turn RAG, leaving a significant gap in addressing the complexities of multi-turn conversations found in real-world app\n\nMusic Discovery Dialogue Generation Using Human Intent Analysis and Large Language Models (2411.07439, 2024-11-11T23:40:45Z) is relevant because A conversational music retrieval system can help users discover music that matches their preferences through dialogue. To achieve this, a conversational music retrieval system should seamlessly engage in multi-turn conversation by 1) understanding user queries and 2) responding with natural language and retrieved music. A straightforward solution would be a \n\nEnhancing Retrieval-Augmented Large Language Models with Iterative Retrieval-Generation Synergy (2305.15294, 2023-05-24T16:17:36Z) is relevant because Large language models are powerful text processors and reasoners, but are still subject to limitations including outdated knowledge and hallucinations, which necessitates connecting them to the world. Retrieval-augmented large language models have raised extensive attention for grounding model generation on external knowledge. However, retrievers struggle to\n\nIn-Context Retrieval-Augmented Language Models (2302.00083, 2023-01-31T20:26:16Z) is relevant because Retrieval-Augmented Language Modeling (RALM) methods, which condition a language model (LM) on relevant documents from a grounding corpus during generation, were shown to significantly improve language modeling performance. In addition, they can mitigate the problem of factually inaccurate text generation and provide natural source attribution mechanism. Exi\n\nActive Retrieval Augmented Generation (2305.06983, 2023-05-11T17:13:40Z) is relevant because Despite the remarkable ability of large language models (LMs) to comprehend and generate language, they have a tendency to hallucinate and create factually inaccurate output. Augmenting LMs by retrieving information from external knowledge resources is one promising solution. Most existing retrieval augmented LMs employ a retrieve-and-generate setup that onl\n\nNeuCLIRBench: A Modern Evaluation Collection for Monolingual, Cross-Language, and Multilingual Information Retrieval (2511.14758, 2025-11-18) is relevant because To measure advances in retrieval, test collections with relevance judgments that can faithfully distinguish systems are required. This paper presents NeuCLIRBench, an evaluation collection for cross-language and multilingual retrieval. The collection consists of documents written natively in Chinese, Persian, and Russian, as well as those same documents mach"
+      },
+      {
+        "heading": "Evidence Review",
+        "content": "No direct paper-level evidence was captured beyond search metadata."
+      },
+      {
+        "heading": "Recommendations",
+        "content": "RECOR: Reasoning-focused Multi-turn Conversational Retrieval Benchmark (2601.05461) should be treated as a priority candidate because Existing benchmarks treat multi-turn conversation and reasoning-intensive retrieval separately, yet real-world information seeking requires both. To bridge this gap, we present a benchmark for reasoning-based conversational information retrieval comprising 707 conversations (2,971 turns) across eleven domains. To ensur\n\nDeepDialogue: A Multi-Turn Emotionally-Rich Spoken Dialogue Dataset (2505.19978) should be treated as a priority candidate because Recent advances in conversational AI have demonstrated impressive capabilities in single-turn responses, yet multi-turn dialogues remain challenging for even the most sophisticated language models. Current dialogue datasets are limited in their emotional range, domain diversity, turn depth, and are predominantly text-o\n\nCORAL: Benchmarking Multi-turn Conversational Retrieval-Augmentation Generation (2410.23090) should be treated as a priority candidate because Retrieval-Augmented Generation (RAG) has become a powerful paradigm for enhancing large language models (LLMs) through external knowledge retrieval. Despite its widespread attention, existing academic research predominantly focuses on single-turn RAG, leaving a significant gap in addressing the complexities of multi-tu\n\nMusic Discovery Dialogue Generation Using Human Intent Analysis and Large Language Models (2411.07439) should be treated as a priority candidate because A conversational music retrieval system can help users discover music that matches their preferences through dialogue. To achieve this, a conversational music retrieval system should seamlessly engage in multi-turn conversation by 1) understanding user queries and 2) responding with natural language and retrieved music\n\nEnhancing Retrieval-Augmented Large Language Models with Iterative Retrieval-Generation Synergy (2305.15294) should be treated as a priority candidate because Large language models are powerful text processors and reasoners, but are still subject to limitations including outdated knowledge and hallucinations, which necessitates connecting them to the world. Retrieval-augmented large language models have raised extensive attention for grounding model generation on external kn"
+      },
+      {
+        "heading": "Caveats and Next Steps",
+        "content": "This report was assembled from partial evidence. If a production decision depends on it, the next step should be to read more recent candidate papers in depth, verify year and task formulation directly, and compare annotation schema, evaluation protocol, and licensing."
+      }
+    ],
+    "notable_papers": [
+      {
+        "arxiv_id": "2601.05461",
+        "title": "RECOR: Reasoning-focused Multi-turn Conversational Retrieval Benchmark",
+        "contribution": "Existing benchmarks treat multi-turn conversation and reasoning-intensive retrieval separately, yet real-world information seeking requires both. To bridge this gap, we present a benchmark for reasoning-based conversational information retrieval comprising 707 conversations (2,971 turns) across eleven domains. To ensur",
+        "evidence": []
+      },
+      {
+        "arxiv_id": "2505.19978",
+        "title": "DeepDialogue: A Multi-Turn Emotionally-Rich Spoken Dialogue Dataset",
+        "contribution": "Recent advances in conversational AI have demonstrated impressive capabilities in single-turn responses, yet multi-turn dialogues remain challenging for even the most sophisticated language models. Current dialogue datasets are limited in their emotional range, domain diversity, turn depth, and are predominantly text-o",
+        "evidence": []
+      },
+      {
+        "arxiv_id": "2410.23090",
+        "title": "CORAL: Benchmarking Multi-turn Conversational Retrieval-Augmentation Generation",
+        "contribution": "Retrieval-Augmented Generation (RAG) has become a powerful paradigm for enhancing large language models (LLMs) through external knowledge retrieval. Despite its widespread attention, existing academic research predominantly focuses on single-turn RAG, leaving a significant gap in addressing the complexities of multi-tu",
+        "evidence": []
+      },
+      {
+        "arxiv_id": "2411.07439",
+        "title": "Music Discovery Dialogue Generation Using Human Intent Analysis and Large Language Models",
+        "contribution": "A conversational music retrieval system can help users discover music that matches their preferences through dialogue. To achieve this, a conversational music retrieval system should seamlessly engage in multi-turn conversation by 1) understanding user queries and 2) responding with natural language and retrieved music",
+        "evidence": []
+      },
+      {
+        "arxiv_id": "2305.15294",
+        "title": "Enhancing Retrieval-Augmented Large Language Models with Iterative Retrieval-Generation Synergy",
+        "contribution": "Large language models are powerful text processors and reasoners, but are still subject to limitations including outdated knowledge and hallucinations, which necessitates connecting them to the world. Retrieval-augmented large language models have raised extensive attention for grounding model generation on external kn",
+        "evidence": []
+      },
+      {
+        "arxiv_id": "2302.00083",
+        "title": "In-Context Retrieval-Augmented Language Models",
+        "contribution": "Retrieval-Augmented Language Modeling (RALM) methods, which condition a language model (LM) on relevant documents from a grounding corpus during generation, were shown to significantly improve language modeling performance. In addition, they can mitigate the problem of factually inaccurate text generation and provide n",
+        "evidence": []
+      }
+    ],
+    "limitations": [
+      "The final report generator did not complete normally, so this report was assembled from collected evidence and fallback synthesis.",
+      "Results remain bounded by the papers surfaced and inspected in this run."
+    ],
+    "follow_up_questions": [
+      "What are the strongest candidate answers for I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.?",
+      "What evidence supports or weakens each candidate for I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.?",
+      "What important caveats or exclusions should be stated for I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.?"
+    ],
+    "markdown": "# I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.\n\n## Question and Scope\nThe user asks: I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.\n\nThe working goal for this run is: Investigate the research question: I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.. The analysis below uses retrieved papers and any successful paper inspections to identify the strongest candidates, explain why they matter, and separate promising options from weaker or older alternatives.\n\n## Candidate Landscape\nRECOR: Reasoning-focused Multi-turn Conversational Retrieval Benchmark (2601.05461, 2026-01-09) is relevant because Existing benchmarks treat multi-turn conversation and reasoning-intensive retrieval separately, yet real-world information seeking requires both. To bridge this gap, we present a benchmark for reasoning-based conversational information retrieval comprising 707 conversations (2,971 turns) across eleven domains. To ensure quality, our Decomposition-and-Verific\n\nDeepDialogue: A Multi-Turn Emotionally-Rich Spoken Dialogue Dataset (2505.19978, 2025-05-26T13:37:10Z) is relevant because Recent advances in conversational AI have demonstrated impressive capabilities in single-turn responses, yet multi-turn dialogues remain challenging for even the most sophisticated language models. Current dialogue datasets are limited in their emotional range, domain diversity, turn depth, and are predominantly text-only, hindering progress in developing mo\n\nCORAL: Benchmarking Multi-turn Conversational Retrieval-Augmentation Generation (2410.23090, 2024-10-30T15:06:32Z) is relevant because Retrieval-Augmented Generation (RAG) has become a powerful paradigm for enhancing large language models (LLMs) through external knowledge retrieval. Despite its widespread attention, existing academic research predominantly focuses on single-turn RAG, leaving a significant gap in addressing the complexities of multi-turn conversations found in real-world app\n\nMusic Discovery Dialogue Generation Using Human Intent Analysis and Large Language Models (2411.07439, 2024-11-11T23:40:45Z) is relevant because A conversational music retrieval system can help users discover music that matches their preferences through dialogue. To achieve this, a conversational music retrieval system should seamlessly engage in multi-turn conversation by 1) understanding user queries and 2) responding with natural language and retrieved music. A straightforward solution would be a \n\nEnhancing Retrieval-Augmented Large Language Models with Iterative Retrieval-Generation Synergy (2305.15294, 2023-05-24T16:17:36Z) is relevant because Large language models are powerful text processors and reasoners, but are still subject to limitations including outdated knowledge and hallucinations, which necessitates connecting them to the world. Retrieval-augmented large language models have raised extensive attention for grounding model generation on external knowledge. However, retrievers struggle to\n\nIn-Context Retrieval-Augmented Language Models (2302.00083, 2023-01-31T20:26:16Z) is relevant because Retrieval-Augmented Language Modeling (RALM) methods, which condition a language model (LM) on relevant documents from a grounding corpus during generation, were shown to significantly improve language modeling performance. In addition, they can mitigate the problem of factually inaccurate text generation and provide natural source attribution mechanism. Exi\n\nActive Retrieval Augmented Generation (2305.06983, 2023-05-11T17:13:40Z) is relevant because Despite the remarkable ability of large language models (LMs) to comprehend and generate language, they have a tendency to hallucinate and create factually inaccurate output. Augmenting LMs by retrieving information from external knowledge resources is one promising solution. Most existing retrieval augmented LMs employ a retrieve-and-generate setup that onl\n\nNeuCLIRBench: A Modern Evaluation Collection for Monolingual, Cross-Language, and Multilingual Information Retrieval (2511.14758, 2025-11-18) is relevant because To measure advances in retrieval, test collections with relevance judgments that can faithfully distinguish systems are required. This paper presents NeuCLIRBench, an evaluation collection for cross-language and multilingual retrieval. The collection consists of documents written natively in Chinese, Persian, and Russian, as well as those same documents mach\n\n## Evidence Review\nNo direct paper-level evidence was captured beyond search metadata.\n\n## Recommendations\nRECOR: Reasoning-focused Multi-turn Conversational Retrieval Benchmark (2601.05461) should be treated as a priority candidate because Existing benchmarks treat multi-turn conversation and reasoning-intensive retrieval separately, yet real-world information seeking requires both. To bridge this gap, we present a benchmark for reasoning-based conversational information retrieval comprising 707 conversations (2,971 turns) across eleven domains. To ensur\n\nDeepDialogue: A Multi-Turn Emotionally-Rich Spoken Dialogue Dataset (2505.19978) should be treated as a priority candidate because Recent advances in conversational AI have demonstrated impressive capabilities in single-turn responses, yet multi-turn dialogues remain challenging for even the most sophisticated language models. Current dialogue datasets are limited in their emotional range, domain diversity, turn depth, and are predominantly text-o\n\nCORAL: Benchmarking Multi-turn Conversational Retrieval-Augmentation Generation (2410.23090) should be treated as a priority candidate because Retrieval-Augmented Generation (RAG) has become a powerful paradigm for enhancing large language models (LLMs) through external knowledge retrieval. Despite its widespread attention, existing academic research predominantly focuses on single-turn RAG, leaving a significant gap in addressing the complexities of multi-tu\n\nMusic Discovery Dialogue Generation Using Human Intent Analysis and Large Language Models (2411.07439) should be treated as a priority candidate because A conversational music retrieval system can help users discover music that matches their preferences through dialogue. To achieve this, a conversational music retrieval system should seamlessly engage in multi-turn conversation by 1) understanding user queries and 2) responding with natural language and retrieved music\n\nEnhancing Retrieval-Augmented Large Language Models with Iterative Retrieval-Generation Synergy (2305.15294) should be treated as a priority candidate because Large language models are powerful text processors and reasoners, but are still subject to limitations including outdated knowledge and hallucinations, which necessitates connecting them to the world. Retrieval-augmented large language models have raised extensive attention for grounding model generation on external kn\n\n## Caveats and Next Steps\nThis report was assembled from partial evidence. If a production decision depends on it, the next step should be to read more recent candidate papers in depth, verify year and task formulation directly, and compare annotation schema, evaluation protocol, and licensing.",
+    "plan": {
+      "goal": "Investigate the research question: I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.",
+      "angle": "Survey main approaches, evidence, tradeoffs, exclusions, and open questions.",
+      "sub_questions": [
+        "What are the strongest candidate answers for I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.?",
+        "What evidence supports or weakens each candidate for I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.?",
+        "What important caveats or exclusions should be stated for I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.?"
+      ],
+      "focus_aspects": [
+        "methods",
+        "evaluation",
+        "limitations",
+        "recommendations"
+      ]
+    },
+    "papers_considered": [
+      {
+        "arxiv_id": "2601.05461",
+        "title": "RECOR: Reasoning-focused Multi-turn Conversational Retrieval Benchmark",
+        "abstract": "Existing benchmarks treat multi-turn conversation and reasoning-intensive retrieval separately, yet real-world information seeking requires both. To bridge this gap, we present a benchmark for reasoning-based conversational information retrieval comprising 707 conversations (2,971 turns) across eleven domains. To ensure quality, our Decomposition-and-Verification framework transforms complex queries into fact-grounded multi-turn dialogues through multi-level validation, where atomic facts are verified against sources and explicit retrieval reasoning is generated for each turn. Comprehensive evaluation reveals that combining conversation history with reasoning doubles retrieval performance (Baseline .236 $\\rightarrow$ History+Reasoning .479 nDCG@10), while reasoning-specialized models substantially outperform dense encoders. Despite these gains, further analysis highlights that implicit reasoning remains challenging, particularly when logical connections are not explicitly stated in the",
+        "authors": [
+          "Amit Agarwal",
+          "Hitesh Laxmichand Patel",
+          "Adam Jatowt",
+          "Mohammed Ali",
+          "Abdelrahman Abdallah"
+        ],
+        "date": "2026-01-09",
+        "score": 0.9950632452964783,
+        "search_queries": [
+          "conversational retrieval dataset 2022 2023 2024 multi-turn dialogue"
+        ],
+        "inspections": {}
+      },
+      {
+        "arxiv_id": "2505.19978",
+        "title": "DeepDialogue: A Multi-Turn Emotionally-Rich Spoken Dialogue Dataset",
+        "abstract": "Recent advances in conversational AI have demonstrated impressive capabilities in single-turn responses, yet multi-turn dialogues remain challenging for even the most sophisticated language models. Current dialogue datasets are limited in their emotional range, domain diversity, turn depth, and are predominantly text-only, hindering progress in developing more human-like conversational systems across modalities. To address these limitations, we present DeepDialogue, a large-scale multimodal dataset containing 40,150 high-quality multi-turn dialogues spanning 41 domains and incorporating 20 distinct emotions with coherent emotional progressions. Our approach pairs 9 different language models (4B-72B parameters) to generate 65,600 initial conversations, which we then evaluate through a combination of human annotation and LLM-based quality filtering. The resulting dataset reveals fundamental insights: smaller models fail to maintain coherence beyond 6 dialogue turns; concrete domains (e.g",
+        "authors": [
+          "Alkis Koudounas",
+          "Moreno La Quatra",
+          "Elena Baralis"
+        ],
+        "date": "2025-05-26T13:37:10Z",
+        "score": 0.9936555624008179,
+        "search_queries": [
+          "conversational retrieval dataset 2022 2023 2024 multi-turn dialogue"
+        ],
+        "inspections": {}
+      },
+      {
+        "arxiv_id": "2410.23090",
+        "title": "CORAL: Benchmarking Multi-turn Conversational Retrieval-Augmentation Generation",
+        "abstract": "Retrieval-Augmented Generation (RAG) has become a powerful paradigm for enhancing large language models (LLMs) through external knowledge retrieval. Despite its widespread attention, existing academic research predominantly focuses on single-turn RAG, leaving a significant gap in addressing the complexities of multi-turn conversations found in real-world applications. To bridge this gap, we introduce CORAL, a large-scale benchmark designed to assess RAG systems in realistic multi-turn conversational settings. CORAL includes diverse information-seeking conversations automatically derived from Wikipedia and tackles key challenges such as open-domain coverage, knowledge intensity, free-form responses, and topic shifts. It supports three core tasks of conversational RAG: passage retrieval, response generation, and citation labeling. We propose a unified framework to standardize various conversational RAG methods and conduct a comprehensive evaluation of these methods on CORAL, demonstratin",
+        "authors": [
+          "Yiruo Cheng",
+          "Kelong Mao",
+          "Ziliang Zhao",
+          "Guanting Dong",
+          "Hongjin Qian",
+          "Yongkang Wu",
+          "Tetsuya Sakai",
+          "Ji-Rong Wen",
+          "Zhicheng Dou"
+        ],
+        "date": "2024-10-30T15:06:32Z",
+        "score": 0.9919948577880859,
+        "search_queries": [
+          "conversational retrieval dataset 2022 2023 2024 multi-turn dialogue"
+        ],
+        "inspections": {}
+      },
+      {
+        "arxiv_id": "2411.07439",
+        "title": "Music Discovery Dialogue Generation Using Human Intent Analysis and Large Language Models",
+        "abstract": "A conversational music retrieval system can help users discover music that matches their preferences through dialogue. To achieve this, a conversational music retrieval system should seamlessly engage in multi-turn conversation by 1) understanding user queries and 2) responding with natural language and retrieved music. A straightforward solution would be a data-driven approach utilizing such conversation logs. However, few datasets are available for the research and are limited in terms of volume and quality. In this paper, we present a data generation framework for rich music discovery dialogue using a large language model (LLM) and user intents, system actions, and musical attributes. This is done by i) dialogue intent analysis using grounded theory, ii) generating attribute sequences via cascading database filtering, and iii) generating utterances using large language models. By applying this framework to the Million Song dataset, we create LP-MusicDialog, a Large Language Model ba",
+        "authors": [
+          "SeungHeon Doh",
+          "Keunwoo Choi",
+          "Daeyong Kwon",
+          "Taesu Kim",
+          "Juhan Nam"
+        ],
+        "date": "2024-11-11T23:40:45Z",
+        "score": 0.99076908826828,
+        "search_queries": [
+          "conversational retrieval dataset 2022 2023 2024 multi-turn dialogue"
+        ],
+        "inspections": {}
+      },
+      {
+        "arxiv_id": "2305.15294",
+        "title": "Enhancing Retrieval-Augmented Large Language Models with Iterative Retrieval-Generation Synergy",
+        "abstract": "Large language models are powerful text processors and reasoners, but are still subject to limitations including outdated knowledge and hallucinations, which necessitates connecting them to the world. Retrieval-augmented large language models have raised extensive attention for grounding model generation on external knowledge. However, retrievers struggle to capture relevance, especially for queries with complex information needs. Recent work has proposed to improve relevance modeling by having large language models actively involved in retrieval, i.e., to improve retrieval with generation. In this paper, we show that strong performance can be achieved by a method we call Iter-RetGen, which synergizes retrieval and generation in an iterative manner. A model output shows what might be needed to finish a task, and thus provides an informative context for retrieving more relevant knowledge which in turn helps generate a better output in the next iteration. Compared with recent work which ",
+        "authors": [
+          "Zhihong Shao",
+          "Yeyun Gong",
+          "Yelong Shen",
+          "Minlie Huang",
+          "Nan Duan",
+          "Weizhu Chen"
+        ],
+        "date": "2023-05-24T16:17:36Z",
+        "score": 0.9906356930732727,
+        "search_queries": [
+          "multi-round retrieval dataset 2022 2023 2024"
+        ],
+        "inspections": {}
+      },
+      {
+        "arxiv_id": "2302.00083",
+        "title": "In-Context Retrieval-Augmented Language Models",
+        "abstract": "Retrieval-Augmented Language Modeling (RALM) methods, which condition a language model (LM) on relevant documents from a grounding corpus during generation, were shown to significantly improve language modeling performance. In addition, they can mitigate the problem of factually inaccurate text generation and provide natural source attribution mechanism. Existing RALM approaches focus on modifying the LM architecture in order to facilitate the incorporation of external information, significantly complicating deployment. This paper considers a simple alternative, which we dub In-Context RALM: leaving the LM architecture unchanged and prepending grounding documents to the input, without any further training of the LM. We show that In-Context RALM that builds on off-the-shelf general purpose retrievers provides surprisingly large LM gains across model sizes and diverse corpora. We also demonstrate that the document retrieval and ranking mechanism can be specialized to the RALM setting to ",
+        "authors": [
+          "Ori Ram",
+          "Yoav Levine",
+          "Itay Dalmedigos",
+          "Dor Muhlgay",
+          "Amnon Shashua",
+          "Kevin Leyton-Brown",
+          "Yoav Shoham"
+        ],
+        "date": "2023-01-31T20:26:16Z",
+        "score": 0.9888104200363159,
+        "search_queries": [
+          "multi-round retrieval dataset 2022 2023 2024"
+        ],
+        "inspections": {}
+      },
+      {
+        "arxiv_id": "2305.06983",
+        "title": "Active Retrieval Augmented Generation",
+        "abstract": "Despite the remarkable ability of large language models (LMs) to comprehend and generate language, they have a tendency to hallucinate and create factually inaccurate output. Augmenting LMs by retrieving information from external knowledge resources is one promising solution. Most existing retrieval augmented LMs employ a retrieve-and-generate setup that only retrieves information once based on the input. This is limiting, however, in more general scenarios involving generation of long texts, where continually gathering information throughout generation is essential. In this work, we provide a generalized view of active retrieval augmented generation, methods that actively decide when and what to retrieve across the course of the generation. We propose Forward-Looking Active REtrieval augmented generation (FLARE), a generic method which iteratively uses a prediction of the upcoming sentence to anticipate future content, which is then utilized as a query to retrieve relevant documents t",
+        "authors": [
+          "Zhengbao Jiang",
+          "Frank F. Xu",
+          "Luyu Gao",
+          "Zhiqing Sun",
+          "Qian Liu",
+          "Jane Dwivedi-Yu",
+          "Yiming Yang",
+          "Graham Neubig"
+        ],
+        "date": "2023-05-11T17:13:40Z",
+        "score": 0.9868354797363281,
+        "search_queries": [
+          "multi-round retrieval dataset 2022 2023 2024"
+        ],
+        "inspections": {}
+      },
+      {
+        "arxiv_id": "2511.14758",
+        "title": "NeuCLIRBench: A Modern Evaluation Collection for Monolingual, Cross-Language, and Multilingual Information Retrieval",
+        "abstract": "To measure advances in retrieval, test collections with relevance judgments that can faithfully distinguish systems are required. This paper presents NeuCLIRBench, an evaluation collection for cross-language and multilingual retrieval. The collection consists of documents written natively in Chinese, Persian, and Russian, as well as those same documents machine translated into English. The collection supports several retrieval scenarios including: monolingual retrieval in English, Chinese, Persian, or Russian; cross-language retrieval with English as the query language and one of the other three languages as the document language; and multilingual retrieval, again with English as the query language and relevant documents in all three languages. NeuCLIRBench combines the TREC NeuCLIR track topics of 2022, 2023, and 2024. The 250,128 judgments across approximately 150 queries for the monolingual and cross-language tasks and 100 queries for multilingual retrieval provide strong statistica",
+        "authors": [
+          "Dawn Lawrie",
+          "Ronak Pradeep",
+          "Sean MacAvaney",
+          "Eugene Yang",
+          "Andrew Yates",
+          "James Mayfield",
+          "Paul McNamee",
+          "Scott Miller",
+          "Luca Soldani"
+        ],
+        "date": "2025-11-18",
+        "score": 0.9795824289321899,
+        "search_queries": [
+          "multi-round retrieval dataset 2022 2023 2024"
+        ],
+        "inspections": {}
+      },
+      {
+        "arxiv_id": "2305.20062",
+        "title": "Chatting Makes Perfect: Chat-based Image Retrieval",
+        "abstract": "Chats emerge as an effective user-friendly approach for information retrieval, and are successfully employed in many domains, such as customer service, healthcare, and finance. However, existing image retrieval approaches typically address the case of a single query-to-image round, and the use of chats for image retrieval has been mostly overlooked. In this work, we introduce ChatIR: a chat-based image retrieval system that engages in a conversation with the user to elicit information, in addition to an initial query, in order to clarify the user's search intent. Motivated by the capabilities of today's foundation models, we leverage Large Language Models to generate follow-up questions to an initial image description. These questions form a dialog with the user in order to retrieve the desired image from a large corpus. In this study, we explore the capabilities of such a system tested on a large dataset and reveal that engaging in a dialog yields significant gains in image retrieval.",
+        "authors": [
+          "Matan Levy",
+          "Rami Ben-Ari",
+          "Nir Darshan",
+          "Dani Lischinski"
+        ],
+        "date": "2023-05-31T17:38:08Z",
+        "score": 0.9750974178314209,
+        "search_queries": [
+          "multi-round retrieval dataset 2022 2023 2024"
+        ],
+        "inspections": {}
+      },
+      {
+        "arxiv_id": "2407.13101",
+        "title": "Retrieve, Summarize, Plan: Advancing Multi-hop Question Answering with an Iterative Approach",
+        "abstract": "Multi-hop question answering is a challenging task with distinct industrial relevance, and Retrieval-Augmented Generation (RAG) methods based on large language models (LLMs) have become a popular approach to tackle this task. Owing to the potential inability to retrieve all necessary information in a single iteration, a series of iterative RAG methods has been recently developed, showing significant performance improvements. However, existing methods still face two critical challenges: context overload resulting from multiple rounds of retrieval, and over-planning and repetitive planning due to the lack of a recorded retrieval trajectory. In this paper, we propose a novel iterative RAG method called ReSP, equipped with a dual-function summarizer. This summarizer compresses information from retrieved documents, targeting both the overarching question and the current sub-question concurrently. Experimental results on the multi-hop question-answering datasets HotpotQA and 2WikiMultihopQA ",
+        "authors": [
+          "Zhouyu Jiang",
+          "Mengshu Sun",
+          "Lei Liang",
+          "Zhiqiang Zhang"
+        ],
+        "date": "2024-07-18T02:19:00Z",
+        "score": 0.9728724360466003,
+        "search_queries": [
+          "multi-round retrieval dataset 2022 2023 2024"
+        ],
+        "inspections": {}
+      },
+      {
+        "arxiv_id": "2410.12154",
+        "title": "Exploiting LLMs' Reasoning Capability to Infer Implicit Concepts in Legal Information Retrieval",
+        "abstract": "Statutory law retrieval is a typical problem in legal language processing, that has various practical applications in law engineering. Modern deep learning-based retrieval methods have achieved significant results for this problem. However, retrieval systems relying on semantic and lexical correlations often exhibit limitations, particularly when handling queries that involve real-life scenarios, or use the vocabulary that is not specific to the legal domain. In this work, we focus on overcoming this weaknesses by utilizing the logical reasoning capabilities of large language models (LLMs) to identify relevant legal terms and facts related to the situation mentioned in the query. The proposed retrieval system integrates additional information from the term--based expansion and query reformulation to improve the retrieval accuracy. The experiments on COLIEE 2022 and COLIEE 2023 datasets show that extra knowledge from LLMs helps to improve the retrieval result of both lexical and semanti",
+        "authors": [
+          "Hai-Long Nguyen",
+          "Tan-Minh Nguyen",
+          "Duc-Minh Nguyen",
+          "Thi-Hai-Yen Vuong",
+          "Ha-Thanh Nguyen",
+          "Xuan-Hieu Phan"
+        ],
+        "date": "2024-10-16T01:34:14Z",
+        "score": 0.9546745419502258,
+        "search_queries": [
+          "multi-round retrieval dataset 2022 2023 2024"
+        ],
+        "inspections": {}
+      }
+    ],
+    "tool_trace": [
+      {
+        "step": 1,
+        "type": "tool",
+        "tool": "search_papers",
+        "summary": "Executed search_papers",
+        "input": {
+          "query": "multi-round retrieval dataset 2022 2023 2024",
+          "top_k": 10,
+          "date_from": "2022-01-01"
+        },
+        "output": {
+          "query": "multi-round retrieval dataset 2022 2023 2024",
+          "total": 13,
+          "items": [
+            {
+              "paper_id": "2305.15294",
+              "title": "Enhancing Retrieval-Augmented Large Language Models with Iterative Retrieval-Generation Synergy",
+              "abstract": "Large language models are powerful text processors and reasoners, but are still subject to limitations including outdated knowledge and hallucinations, which necessitates connecting them to the world. Retrieval-augmented large language models have raised extensive attention for grounding model generation on external knowledge. However, retrievers struggle to capture relevance, especially for queries with complex information needs. Recent work has proposed to improve relevance modeling by having large language models actively involved in retrieval, i.e., to improve retrieval with generation. In this paper, we show that strong performance can be achieved by a method we call Iter-RetGen, which synergizes retrieval and generation in an iterative manner. A model output shows what might be needed to finish a task, and thus provides an informative context for retrieving more relevant knowledge which in turn helps generate a better output in the next iteration. Compared with recent work which interleaves retrieval with generation when producing an output, Iter-RetGen processes all retrieved knowledge as a whole and largely preserves the flexibility in generation without structural constraints. We evaluate Iter-RetGen on multi-hop question answering, fact verification, and commonsense reasoning, and show that it can flexibly leverage parametric knowledge and non-parametric knowledge, and is superior to or competitive with state-of-the-art retrieval-augmented baselines while causing fewer overheads of retrieval and generation. We can further improve performance via generation-augmented retrieval adaptation.",
+              "score": 0.9906356930732727,
+              "url": "https://arxiv.org/pdf/2305.15294v2",
+              "date": "2023-05-24T16:17:36Z",
+              "authors": [
+                "Zhihong Shao",
+                "Yeyun Gong",
+                "Yelong Shen",
+                "Minlie Huang",
+                "Nan Duan",
+                "Weizhu Chen"
+              ]
+            },
+            {
+              "paper_id": "2212.10509",
+              "title": "Interleaving Retrieval with Chain-of-Thought Reasoning for Knowledge-Intensive Multi-Step Questions",
+              "abstract": "Prompting-based large language models (LLMs) are surprisingly powerful at generating natural language reasoning steps or Chains-of-Thoughts (CoT) for multi-step question answering (QA). They struggle, however, when the necessary knowledge is either unavailable to the LLM or not up-to-date within its parameters. While using the question to retrieve relevant text from an external knowledge source helps LLMs, we observe that this one-step retrieve-and-read approach is insufficient for multi-step QA. Here, \\textit{what to retrieve} depends on \\textit{what has already been derived}, which in turn may depend on \\textit{what was previously retrieved}. To address this, we propose IRCoT, a new approach for multi-step QA that interleaves retrieval with steps (sentences) in a CoT, guiding the retrieval with CoT and in turn using retrieved results to improve CoT. Using IRCoT with GPT3 substantially improves retrieval (up to 21 points) as well as downstream QA (up to 15 points) on four datasets: HotpotQA, 2WikiMultihopQA, MuSiQue, and IIRC. We observe similar substantial gains in out-of-distribution (OOD) settings as well as with much smaller models such as Flan-T5-large without additional training. IRCoT reduces model hallucination, resulting in factually more accurate CoT reasoning. Code, data, and prompts are available at \\url{https://github.com/stonybrooknlp/ircot}",
+              "score": 0.9906021356582642,
+              "url": "https://arxiv.org/pdf/2212.10509v2",
+              "date": "2022-12-20T18:26:34Z",
+              "authors": [
+                "Harsh Trivedi",
+                "Niranjan Balasubramanian",
+                "Tushar Khot",
+                "Ashish Sabharwal"
+              ]
+            },
+            {
+              "paper_id": "2302.00083",
+              "title": "In-Context Retrieval-Augmented Language Models",
+              "abstract": "Retrieval-Augmented Language Modeling (RALM) methods, which condition a language model (LM) on relevant documents from a grounding corpus during generation, were shown to significantly improve language modeling performance. In addition, they can mitigate the problem of factually inaccurate text generation and provide natural source attribution mechanism. Existing RALM approaches focus on modifying the LM architecture in order to facilitate the incorporation of external information, significantly complicating deployment. This paper considers a simple alternative, which we dub In-Context RALM: leaving the LM architecture unchanged and prepending grounding documents to the input, without any further training of the LM. We show that In-Context RALM that builds on off-the-shelf general purpose retrievers provides surprisingly large LM gains across model sizes and diverse corpora. We also demonstrate that the document retrieval and ranking mechanism can be specialized to the RALM setting to further boost performance. We conclude that In-Context RALM has considerable potential to increase the prevalence of LM grounding, particularly in settings where a pretrained LM must be used without modification or even via API access.",
+              "score": 0.9888104200363159,
+              "url": "https://arxiv.org/pdf/2302.00083v3",
+              "date": "2023-01-31T20:26:16Z",
+              "authors": [
+                "Ori Ram",
+                "Yoav Levine",
+                "Itay Dalmedigos",
+                "Dor Muhlgay",
+                "Amnon Shashua",
+                "Kevin Leyton-Brown",
+                "Yoav Shoham"
+              ]
+            },
+            {
+              "paper_id": "2305.06983",
+              "title": "Active Retrieval Augmented Generation",
+              "abstract": "Despite the remarkable ability of large language models (LMs) to comprehend and generate language, they have a tendency to hallucinate and create factually inaccurate output. Augmenting LMs by retrieving information from external knowledge resources is one promising solution. Most existing retrieval augmented LMs employ a retrieve-and-generate setup that only retrieves information once based on the input. This is limiting, however, in more general scenarios involving generation of long texts, where continually gathering information throughout generation is essential. In this work, we provide a generalized view of active retrieval augmented generation, methods that actively decide when and what to retrieve across the course of the generation. We propose Forward-Looking Active REtrieval augmented generation (FLARE), a generic method which iteratively uses a prediction of the upcoming sentence to anticipate future content, which is then utilized as a query to retrieve relevant documents to regenerate the sentence if it contains low-confidence tokens. We test FLARE along with baselines comprehensively over 4 long-form knowledge-intensive generation tasks/datasets. FLARE achieves superior or competitive performance on all tasks, demonstrating the effectiveness of our method. Code and datasets are available at https://github.com/jzbjyb/FLARE.",
+              "score": 0.9868354797363281,
+              "url": "https://arxiv.org/pdf/2305.06983v2",
+              "date": "2023-05-11T17:13:40Z",
+              "authors": [
+                "Zhengbao Jiang",
+                "Frank F. Xu",
+                "Luyu Gao",
+                "Zhiqing Sun",
+                "Qian Liu",
+                "Jane Dwivedi-Yu",
+                "Yiming Yang",
+                "Graham Neubig"
+              ]
+            },
+            {
+              "paper_id": "2511.14758",
+              "title": "NeuCLIRBench: A Modern Evaluation Collection for Monolingual, Cross-Language, and Multilingual Information Retrieval",
+              "abstract": "To measure advances in retrieval, test collections with relevance judgments that can faithfully distinguish systems are required. This paper presents NeuCLIRBench, an evaluation collection for cross-language and multilingual retrieval. The collection consists of documents written natively in Chinese, Persian, and Russian, as well as those same documents machine translated into English. The collection supports several retrieval scenarios including: monolingual retrieval in English, Chinese, Persian, or Russian; cross-language retrieval with English as the query language and one of the other three languages as the document language; and multilingual retrieval, again with English as the query language and relevant documents in all three languages. NeuCLIRBench combines the TREC NeuCLIR track topics of 2022, 2023, and 2024. The 250,128 judgments across approximately 150 queries for the monolingual and cross-language tasks and 100 queries for multilingual retrieval provide strong statistical discriminatory power to distinguish retrieval approaches. A fusion baseline of strong neural retrieval systems is included with the collection so that developers of reranking algorithms are no longer reliant on BM25 as their first-stage retriever. NeuCLIRBench is publicly available.",
+              "score": 0.9795824289321899,
+              "url": "https://arxiv.org/abs/2511.14758v1",
+              "date": "2025-11-18",
+              "authors": [
+                "Dawn Lawrie",
+                "Ronak Pradeep",
+                "Sean MacAvaney",
+                "Eugene Yang",
+                "Andrew Yates",
+                "James Mayfield",
+                "Paul McNamee",
+                "Scott Miller",
+                "Luca Soldani"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "step": 2,
+        "type": "tool",
+        "tool": "search_papers",
+        "summary": "Executed search_papers",
+        "input": {
+          "query": "conversational retrieval dataset 2022 2023 2024 multi-turn dialogue",
+          "top_k": 10,
+          "date_from": "2022-01-01"
+        },
+        "output": {
+          "query": "conversational retrieval dataset 2022 2023 2024 multi-turn dialogue",
+          "total": 22,
+          "items": [
+            {
+              "paper_id": "2211.05719",
+              "title": "MMDialog: A Large-scale Multi-turn Dialogue Dataset Towards Multi-modal Open-domain Conversation",
+              "abstract": "Responding with multi-modal content has been recognized as an essential capability for an intelligent conversational agent. In this paper, we introduce the MMDialog dataset to better facilitate multi-modal conversation. MMDialog is composed of a curated set of 1.08 million real-world dialogues with 1.53 million unique images across 4,184 topics. MMDialog has two main and unique advantages. First, it is the largest multi-modal conversation dataset by the number of dialogues by 88x. Second, it contains massive topics to generalize the open-domain. To build engaging dialogue system with this dataset, we propose and normalize two response producing tasks based on retrieval and generative scenarios. In addition, we build two baselines for above tasks with state-of-the-art techniques and report their experimental performance. We also propose a novel evaluation metric MM-Relevance to measure the multi-modal responses. Our dataset and scripts are available in https://github.com/victorsungo/MMDialog.",
+              "score": 0.9971969127655029,
+              "url": "https://arxiv.org/pdf/2211.05719v3",
+              "date": "2022-11-10T17:37:04Z",
+              "authors": [
+                "Jiazhan Feng",
+                "Qingfeng Sun",
+                "Can Xu",
+                "Yaming Yang",
+                "Chongyang Tao",
+                "Dongyan Zhao"
+              ]
+            },
+            {
+              "paper_id": "2601.05461",
+              "title": "RECOR: Reasoning-focused Multi-turn Conversational Retrieval Benchmark",
+              "abstract": "Existing benchmarks treat multi-turn conversation and reasoning-intensive retrieval separately, yet real-world information seeking requires both. To bridge this gap, we present a benchmark for reasoning-based conversational information retrieval comprising 707 conversations (2,971 turns) across eleven domains. To ensure quality, our Decomposition-and-Verification framework transforms complex queries into fact-grounded multi-turn dialogues through multi-level validation, where atomic facts are verified against sources and explicit retrieval reasoning is generated for each turn. Comprehensive evaluation reveals that combining conversation history with reasoning doubles retrieval performance (Baseline .236 $\\rightarrow$ History+Reasoning .479 nDCG@10), while reasoning-specialized models substantially outperform dense encoders. Despite these gains, further analysis highlights that implicit reasoning remains challenging, particularly when logical connections are not explicitly stated in the text.",
+              "score": 0.9950632452964783,
+              "url": "https://arxiv.org/abs/2601.05461v1",
+              "date": "2026-01-09",
+              "authors": [
+                "Amit Agarwal",
+                "Hitesh Laxmichand Patel",
+                "Adam Jatowt",
+                "Mohammed Ali",
+                "Abdelrahman Abdallah"
+              ]
+            },
+            {
+              "paper_id": "1506.08909",
+              "title": "The Ubuntu Dialogue Corpus: A Large Dataset for Research in Unstructured Multi-Turn Dialogue Systems",
+              "abstract": "This paper introduces the Ubuntu Dialogue Corpus, a dataset containing almost 1 million multi-turn dialogues, with a total of over 7 million utterances and 100 million words. This provides a unique resource for research into building dialogue managers based on neural language models that can make use of large amounts of unlabeled data. The dataset has both the multi-turn property of conversations in the Dialog State Tracking Challenge datasets, and the unstructured nature of interactions from microblog services such as Twitter. We also describe two neural learning architectures suitable for analyzing this dataset, and provide benchmark performance on the task of selecting the best next response.",
+              "score": 0.9936727285385132,
+              "url": "https://arxiv.org/pdf/1506.08909v3",
+              "date": "2015-06-30T00:37:09Z",
+              "authors": [
+                "Ryan Lowe",
+                "Nissan Pow",
+                "Iulian V. Serban",
+                "Joelle Pineau"
+              ]
+            },
+            {
+              "paper_id": "2505.19978",
+              "title": "DeepDialogue: A Multi-Turn Emotionally-Rich Spoken Dialogue Dataset",
+              "abstract": "Recent advances in conversational AI have demonstrated impressive capabilities in single-turn responses, yet multi-turn dialogues remain challenging for even the most sophisticated language models. Current dialogue datasets are limited in their emotional range, domain diversity, turn depth, and are predominantly text-only, hindering progress in developing more human-like conversational systems across modalities. To address these limitations, we present DeepDialogue, a large-scale multimodal dataset containing 40,150 high-quality multi-turn dialogues spanning 41 domains and incorporating 20 distinct emotions with coherent emotional progressions. Our approach pairs 9 different language models (4B-72B parameters) to generate 65,600 initial conversations, which we then evaluate through a combination of human annotation and LLM-based quality filtering. The resulting dataset reveals fundamental insights: smaller models fail to maintain coherence beyond 6 dialogue turns; concrete domains (e.g., \"cars,\" \"travel\") yield more meaningful conversations than abstract ones (e.g., \"philosophy\"); and cross-model interactions produce more coherent dialogues than same-model conversations. A key contribution of DeepDialogue is its speech component, where we synthesize emotion-consistent voices for all 40,150 dialogues, creating the first large-scale open-source multimodal dialogue dataset that faithfully preserves emotional context across multi-turn conversations.",
+              "score": 0.9936555624008179,
+              "url": "https://arxiv.org/pdf/2505.19978v1",
+              "date": "2025-05-26T13:37:10Z",
+              "authors": [
+                "Alkis Koudounas",
+                "Moreno La Quatra",
+                "Elena Baralis"
+              ]
+            },
+            {
+              "paper_id": "1710.03957",
+              "title": "DailyDialog: A Manually Labelled Multi-turn Dialogue Dataset",
+              "abstract": "We develop a high-quality multi-turn dialog dataset, DailyDialog, which is intriguing in several aspects. The language is human-written and less noisy. The dialogues in the dataset reflect our daily communication way and cover various topics about our daily life. We also manually label the developed dataset with communication intention and emotion information. Then, we evaluate existing approaches on DailyDialog dataset and hope it benefit the research field of dialog systems.",
+              "score": 0.9932154417037964,
+              "url": "https://arxiv.org/pdf/1710.03957v1",
+              "date": "2017-10-11T08:30:30Z",
+              "authors": [
+                "Yanran Li",
+                "Hui Su",
+                "Xiaoyu Shen",
+                "Wenjie Li",
+                "Ziqiang Cao",
+                "Shuzi Niu"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "step": 3,
+        "type": "tool_error",
+        "tool": "research_report_llm",
+        "input": {
+          "attempt": 1
+        },
+        "summary": "research_report_llm failed",
+        "error": "ReadError: "
+      },
+      {
+        "step": 4,
+        "type": "tool_error",
+        "tool": "research_report_llm",
+        "input": {
+          "attempt": 2
+        },
+        "summary": "research_report_llm failed",
+        "error": "ReadError: "
+      },
+      {
+        "step": 5,
+        "type": "report_fallback",
+        "summary": "Fell back to deterministic report rendering after report generation failure"
+      }
+    ]
+  }
+}

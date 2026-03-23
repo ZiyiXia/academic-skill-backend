@@ -1,0 +1,8 @@
+INFO:     Started server process [23543]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8010 (Press CTRL+C to quit)
+INFO:     127.0.0.1:61276 - "POST /v1/blog/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61278 - "GET /v1/blog/jobs/63a070dbe23248528bf31a0b1b86d5ba HTTP/1.1" 200 OK
+2026-03-23 10:33:56,979 INFO httpx HTTP Request: GET https://arxiv.org/pdf/2603.12572.pdf "HTTP/1.1 301 Moved Permanently"
+2026-03-23 10:33:57,047 INFO httpx HTTP Request: GET https://arxiv.org/pdf/2603.12572 "HTTP/1.1 200 OK"

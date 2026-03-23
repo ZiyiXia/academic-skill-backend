@@ -1,0 +1,73 @@
+INFO:     Started server process [47011]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8010 (Press CTRL+C to quit)
+INFO:     127.0.0.1:58791 - "POST /v1/blog/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58793 - "GET /v1/blog/jobs/18915c686d50468c8b4189d1ebafd65e HTTP/1.1" 200 OK
+2026-03-23 01:24:13,425 INFO httpx HTTP Request: GET https://arxiv.org/pdf/2603.10165.pdf "HTTP/1.1 301 Moved Permanently"
+2026-03-23 01:24:13,499 INFO httpx HTTP Request: GET https://arxiv.org/pdf/2603.10165 "HTTP/1.1 200 OK"
+2026-03-23 01:24:14,163 INFO httpx HTTP Request: POST http://120.92.112.87:32500/api/v1/ppt/initStyleJson "HTTP/1.1 200 OK"
+2026-03-23 01:24:15,798 INFO httpx HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:58801 - "GET /v1/blog/jobs/18915c686d50468c8b4189d1ebafd65e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58808 - "GET /v1/blog/jobs/18915c686d50468c8b4189d1ebafd65e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58810 - "GET /v1/blog/jobs/18915c686d50468c8b4189d1ebafd65e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58814 - "GET /v1/blog/jobs/18915c686d50468c8b4189d1ebafd65e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58817 - "GET /v1/blog/jobs/18915c686d50468c8b4189d1ebafd65e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58818 - "GET /v1/blog/jobs/18915c686d50468c8b4189d1ebafd65e/result HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58944 - "POST /v1/blog/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58946 - "GET /v1/blog/jobs/c15a12a8c617490e8b3a1b98c698c59d HTTP/1.1" 200 OK
+2026-03-23 01:32:56,573 INFO httpx HTTP Request: GET https://arxiv.org/pdf/2603.02604.pdf "HTTP/1.1 301 Moved Permanently"
+2026-03-23 01:32:56,644 INFO httpx HTTP Request: GET https://arxiv.org/pdf/2603.02604 "HTTP/1.1 200 OK"
+2026-03-23 01:32:57,306 INFO httpx HTTP Request: POST http://120.92.112.87:32500/api/v1/ppt/initStyleJson "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:58956 - "GET /v1/blog/jobs/c15a12a8c617490e8b3a1b98c698c59d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58957 - "GET /v1/blog/jobs/c15a12a8c617490e8b3a1b98c698c59d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58973 - "GET /v1/blog/jobs/c15a12a8c617490e8b3a1b98c698c59d HTTP/1.1" 200 OK
+2026-03-23 01:33:28,218 INFO httpx HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:58978 - "GET /v1/blog/jobs/c15a12a8c617490e8b3a1b98c698c59d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58980 - "GET /v1/blog/jobs/c15a12a8c617490e8b3a1b98c698c59d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58982 - "GET /v1/blog/jobs/c15a12a8c617490e8b3a1b98c698c59d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58986 - "GET /v1/blog/jobs/c15a12a8c617490e8b3a1b98c698c59d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58987 - "GET /v1/blog/jobs/c15a12a8c617490e8b3a1b98c698c59d/result HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59093 - "POST /v1/blog/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59095 - "GET /v1/blog/jobs/1a46d96d3154481d8fac28c755138cf7 HTTP/1.1" 200 OK
+2026-03-23 01:38:42,819 INFO httpx HTTP Request: GET https://arxiv.org/pdf/2603.12572.pdf "HTTP/1.1 301 Moved Permanently"
+2026-03-23 01:38:42,891 INFO httpx HTTP Request: GET https://arxiv.org/pdf/2603.12572 "HTTP/1.1 200 OK"
+2026-03-23 01:38:48,215 INFO httpx HTTP Request: POST http://120.92.112.87:32500/api/v1/ppt/initStyleJson "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:59100 - "GET /v1/blog/jobs/1a46d96d3154481d8fac28c755138cf7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59103 - "GET /v1/blog/jobs/1a46d96d3154481d8fac28c755138cf7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59106 - "GET /v1/blog/jobs/1a46d96d3154481d8fac28c755138cf7 HTTP/1.1" 200 OK
+2026-03-23 01:39:19,160 INFO httpx HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:59110 - "GET /v1/blog/jobs/1a46d96d3154481d8fac28c755138cf7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59120 - "GET /v1/blog/jobs/1a46d96d3154481d8fac28c755138cf7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59124 - "GET /v1/blog/jobs/1a46d96d3154481d8fac28c755138cf7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59126 - "GET /v1/blog/jobs/1a46d96d3154481d8fac28c755138cf7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59127 - "GET /v1/blog/jobs/1a46d96d3154481d8fac28c755138cf7/result HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59259 - "POST /v1/blog/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59261 - "GET /v1/blog/jobs/1921205307eb44bb82e7cfc2ef567cb0 HTTP/1.1" 200 OK
+2026-03-23 01:45:21,623 INFO httpx HTTP Request: GET https://arxiv.org/pdf/2603.02604.pdf "HTTP/1.1 301 Moved Permanently"
+2026-03-23 01:45:21,698 INFO httpx HTTP Request: GET https://arxiv.org/pdf/2603.02604 "HTTP/1.1 200 OK"
+2026-03-23 01:45:22,363 INFO httpx HTTP Request: POST http://120.92.112.87:32500/api/v1/ppt/initStyleJson "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:59274 - "GET /v1/blog/jobs/1921205307eb44bb82e7cfc2ef567cb0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59276 - "GET /v1/blog/jobs/1921205307eb44bb82e7cfc2ef567cb0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59278 - "GET /v1/blog/jobs/1921205307eb44bb82e7cfc2ef567cb0 HTTP/1.1" 200 OK
+2026-03-23 01:45:53,178 INFO httpx HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:59284 - "GET /v1/blog/jobs/1921205307eb44bb82e7cfc2ef567cb0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59288 - "GET /v1/blog/jobs/1921205307eb44bb82e7cfc2ef567cb0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59290 - "GET /v1/blog/jobs/1921205307eb44bb82e7cfc2ef567cb0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59297 - "GET /v1/blog/jobs/1921205307eb44bb82e7cfc2ef567cb0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59298 - "GET /v1/blog/jobs/1921205307eb44bb82e7cfc2ef567cb0/result HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59310 - "POST /v1/blog/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59312 - "GET /v1/blog/jobs/e1f42232108a471e8bbbe4ca74dd824c HTTP/1.1" 200 OK
+2026-03-23 01:47:22,066 INFO httpx HTTP Request: GET https://arxiv.org/pdf/2603.12572.pdf "HTTP/1.1 301 Moved Permanently"
+2026-03-23 01:47:22,139 INFO httpx HTTP Request: GET https://arxiv.org/pdf/2603.12572 "HTTP/1.1 200 OK"
+2026-03-23 01:52:47,551 INFO httpx HTTP Request: GET https://arxiv.org/pdf/2603.12572.pdf "HTTP/1.1 301 Moved Permanently"
+2026-03-23 01:52:47,622 INFO httpx HTTP Request: GET https://arxiv.org/pdf/2603.12572 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:59522 - "POST /v1/blog/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59568 - "GET /v1/blog/jobs/5d48e9c6cae24e04a41fc4cbc603ab40 HTTP/1.1" 200 OK
+2026-03-23 01:58:08,028 INFO httpx HTTP Request: GET https://arxiv.org/pdf/2603.12572.pdf "HTTP/1.1 301 Moved Permanently"
+2026-03-23 01:58:08,101 INFO httpx HTTP Request: GET https://arxiv.org/pdf/2603.12572 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:59571 - "GET /v1/blog/jobs/5d48e9c6cae24e04a41fc4cbc603ab40 HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [47011]

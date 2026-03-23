@@ -1,0 +1,163 @@
+INFO:     Started server process [48034]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8010 (Press CTRL+C to quit)
+INFO:     127.0.0.1:61673 - "POST /v1/blog/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61675 - "GET /v1/blog/jobs/22f977bb9cb24c6d95b919d2bd3a6e27 HTTP/1.1" 200 OK
+2026-03-23 10:46:39,626 INFO httpx HTTP Request: GET https://arxiv.org/pdf/2603.15726.pdf "HTTP/1.1 301 Moved Permanently"
+2026-03-23 10:46:39,693 INFO httpx HTTP Request: GET https://arxiv.org/pdf/2603.15726 "HTTP/1.1 200 OK"
+2026-03-23 10:46:40,717 INFO httpx HTTP Request: POST http://120.92.112.87:32500/api/v1/ppt/initStyleJson "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:61682 - "GET /v1/blog/jobs/22f977bb9cb24c6d95b919d2bd3a6e27 HTTP/1.1" 200 OK
+/opt/miniconda3/lib/python3.12/site-packages/pydantic/_internal/_model_construction.py:686: RuntimeWarning: coroutine 'BlogService._list_page_markdown_keys' was never awaited
+  def __init__(self, obj: Any):
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback
+2026-03-23 10:47:17,232 INFO httpx HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+2026-03-23 10:47:27,147 INFO httpx HTTP Request: POST http://120.92.112.87:25620/api/api/retrieval/agentic_data_api/retrieve "HTTP/1.1 200 OK"
+2026-03-23 10:47:27,334 INFO httpx HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+2026-03-23 10:47:40,840 INFO httpx HTTP Request: POST http://120.92.112.87:25620/api/api/retrieval/agentic_data_api/retrieve "HTTP/1.1 200 OK"
+2026-03-23 10:47:41,055 INFO httpx HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:     Shutting down
+INFO:     Waiting for background tasks to complete. (CTRL+C to force quit)
+INFO:     Finished server process [48034]
+ERROR:    Traceback (most recent call last):
+  File "/opt/miniconda3/lib/python3.12/asyncio/runners.py", line 194, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "uvloop/loop.pyx", line 1512, in uvloop.loop.Loop.run_until_complete
+  File "uvloop/loop.pyx", line 1505, in uvloop.loop.Loop.run_until_complete
+  File "uvloop/loop.pyx", line 1379, in uvloop.loop.Loop.run_forever
+  File "uvloop/loop.pyx", line 557, in uvloop.loop.Loop._run
+  File "uvloop/loop.pyx", line 476, in uvloop.loop.Loop._on_idle
+  File "uvloop/cbhandles.pyx", line 83, in uvloop.loop.Handle._run
+  File "uvloop/cbhandles.pyx", line 63, in uvloop.loop.Handle._run
+  File "/opt/miniconda3/lib/python3.12/site-packages/uvicorn/server.py", line 78, in serve
+    with self.capture_signals():
+  File "/opt/miniconda3/lib/python3.12/contextlib.py", line 144, in __exit__
+    next(self.gen)
+  File "/opt/miniconda3/lib/python3.12/site-packages/uvicorn/server.py", line 339, in capture_signals
+    signal.raise_signal(captured_signal)
+  File "/opt/miniconda3/lib/python3.12/asyncio/runners.py", line 157, in _on_sigint
+    raise KeyboardInterrupt()
+KeyboardInterrupt
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/miniconda3/lib/python3.12/site-packages/starlette/routing.py", line 701, in lifespan
+    await receive()
+  File "/opt/miniconda3/lib/python3.12/site-packages/uvicorn/lifespan/on.py", line 137, in receive
+    return await self.receive_queue.get()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.12/asyncio/queues.py", line 158, in get
+    await getter
+asyncio.exceptions.CancelledError
+
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/opt/miniconda3/lib/python3.12/site-packages/uvicorn/protocols/http/httptools_impl.py", line 416, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.12/site-packages/fastapi/applications.py", line 1160, in __call__
+    await super().__call__(scope, receive, send)
+  File "/opt/miniconda3/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/opt/miniconda3/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/opt/miniconda3/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/opt/miniconda3/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/opt/miniconda3/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/opt/miniconda3/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/opt/miniconda3/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/opt/miniconda3/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/opt/miniconda3/lib/python3.12/site-packages/fastapi/routing.py", line 130, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/opt/miniconda3/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/opt/miniconda3/lib/python3.12/site-packages/fastapi/routing.py", line 116, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.12/site-packages/fastapi/routing.py", line 670, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.12/site-packages/fastapi/routing.py", line 324, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/baai/Desktop/Projects/demo_serve/academic-skill-backend/app/api/v1/research.py", line 16, in run_research
+    return await service.run(payload)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/baai/Desktop/Projects/demo_serve/academic-skill-backend/app/services/research.py", line 89, in run
+    report = await self._generate_report(payload, messages, plan, catalog, evidence_bank, trace)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/baai/Desktop/Projects/demo_serve/academic-skill-backend/app/services/research.py", line 282, in _generate_report
+    raw = await self._chat_completion_text(attempt_messages)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/baai/Desktop/Projects/demo_serve/academic-skill-backend/app/services/research.py", line 396, in _chat_completion_text
+    message = await self._chat_completion(messages=messages)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/baai/Desktop/Projects/demo_serve/academic-skill-backend/app/services/research.py", line 378, in _chat_completion
+    response = await self.llm_client.chat.completions.create(**params)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.12/site-packages/openai/resources/chat/completions/completions.py", line 2700, in create
+    return await self._post(
+           ^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.12/site-packages/openai/_base_client.py", line 1884, in post
+    return await self.request(cast_to, opts, stream=stream, stream_cls=stream_cls)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.12/site-packages/openai/_base_client.py", line 1604, in request
+    response = await self._client.send(
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.12/site-packages/httpx/_client.py", line 1688, in send
+    raise exc
+  File "/opt/miniconda3/lib/python3.12/site-packages/httpx/_client.py", line 1682, in send
+    await response.aread()
+  File "/opt/miniconda3/lib/python3.12/site-packages/httpx/_models.py", line 913, in aread
+    self._content = b"".join([part async for part in self.aiter_bytes()])
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.12/site-packages/httpx/_models.py", line 931, in aiter_bytes
+    async for raw_bytes in self.aiter_raw():
+  File "/opt/miniconda3/lib/python3.12/site-packages/httpx/_models.py", line 989, in aiter_raw
+    async for raw_stream_bytes in self.stream:
+  File "/opt/miniconda3/lib/python3.12/site-packages/httpx/_client.py", line 150, in __aiter__
+    async for chunk in self._stream:
+  File "/opt/miniconda3/lib/python3.12/site-packages/httpx/_transports/default.py", line 257, in __aiter__
+    async for part in self._httpcore_stream:
+  File "/opt/miniconda3/lib/python3.12/site-packages/httpcore/_async/connection_pool.py", line 367, in __aiter__
+    raise exc from None
+  File "/opt/miniconda3/lib/python3.12/site-packages/httpcore/_async/connection_pool.py", line 363, in __aiter__
+    async for part in self._stream:
+  File "/opt/miniconda3/lib/python3.12/site-packages/httpcore/_async/http11.py", line 349, in __aiter__
+    raise exc
+  File "/opt/miniconda3/lib/python3.12/site-packages/httpcore/_async/http11.py", line 341, in __aiter__
+    async for chunk in self._connection._receive_response_body(**kwargs):
+  File "/opt/miniconda3/lib/python3.12/site-packages/httpcore/_async/http11.py", line 210, in _receive_response_body
+    event = await self._receive_event(timeout=timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.12/site-packages/httpcore/_async/http11.py", line 224, in _receive_event
+    data = await self._network_stream.read(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.12/site-packages/httpcore/_backends/anyio.py", line 35, in read
+    return await self._stream.receive(max_bytes=max_bytes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.12/site-packages/anyio/streams/tls.py", line 205, in receive
+    data = await self._call_sslobject_method(self._ssl_object.read, max_bytes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.12/site-packages/anyio/streams/tls.py", line 147, in _call_sslobject_method
+    data = await self.transport_stream.receive()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1198, in receive
+    await self._protocol.read_event.wait()
+  File "/opt/miniconda3/lib/python3.12/asyncio/locks.py", line 212, in wait
+    await fut
+asyncio.exceptions.CancelledError

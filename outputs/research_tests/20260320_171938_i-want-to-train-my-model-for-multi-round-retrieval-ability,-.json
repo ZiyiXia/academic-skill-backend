@@ -1,0 +1,96 @@
+{
+  "status": "success",
+  "message": "Generated research report for query: I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.",
+  "report": {
+    "query": "I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.",
+    "title": "Research Report: I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.",
+    "executive_summary": "The current run retrieved partial evidence but final report synthesis had to fall back.",
+    "key_findings": [],
+    "sections": [
+      {
+        "heading": "Question and Scope",
+        "content": "The user asks: I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.\n\nThe working goal for this run is: Investigate the research question: I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.. The analysis below uses retrieved papers and any successful paper inspections to identify the strongest candidates, explain why they matter, and separate promising options from weaker or older alternatives."
+      },
+      {
+        "heading": "Candidate Landscape",
+        "content": "No strong candidate papers survived this run."
+      },
+      {
+        "heading": "Evidence Review",
+        "content": "No direct paper-level evidence was captured beyond search metadata."
+      },
+      {
+        "heading": "Recommendations",
+        "content": "There is not yet enough direct evidence to make high-confidence recommendations."
+      },
+      {
+        "heading": "Caveats and Next Steps",
+        "content": "This report was assembled from partial evidence. If a production decision depends on it, the next step should be to read more recent candidate papers in depth, verify year and task formulation directly, and compare annotation schema, evaluation protocol, and licensing."
+      }
+    ],
+    "notable_papers": [],
+    "limitations": [
+      "The final report generator did not complete normally, so this report was assembled from collected evidence and fallback synthesis.",
+      "Results remain bounded by the papers surfaced and inspected in this run."
+    ],
+    "follow_up_questions": [
+      "What are the strongest candidate answers for I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.?",
+      "What evidence supports or weakens each candidate for I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.?",
+      "What important caveats or exclusions should be stated for I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.?"
+    ],
+    "markdown": "# I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.\n\n## Question and Scope\nThe user asks: I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.\n\nThe working goal for this run is: Investigate the research question: I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.. The analysis below uses retrieved papers and any successful paper inspections to identify the strongest candidates, explain why they matter, and separate promising options from weaker or older alternatives.\n\n## Candidate Landscape\nNo strong candidate papers survived this run.\n\n## Evidence Review\nNo direct paper-level evidence was captured beyond search metadata.\n\n## Recommendations\nThere is not yet enough direct evidence to make high-confidence recommendations.\n\n## Caveats and Next Steps\nThis report was assembled from partial evidence. If a production decision depends on it, the next step should be to read more recent candidate papers in depth, verify year and task formulation directly, and compare annotation schema, evaluation protocol, and licensing.",
+    "plan": {
+      "goal": "Investigate the research question: I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.",
+      "angle": "Survey main approaches, evidence, tradeoffs, exclusions, and open questions.",
+      "sub_questions": [
+        "What are the strongest candidate answers for I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.?",
+        "What evidence supports or weakens each candidate for I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.?",
+        "What important caveats or exclusions should be stated for I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.?"
+      ],
+      "focus_aspects": [
+        "methods",
+        "evaluation",
+        "limitations",
+        "recommendations"
+      ]
+    },
+    "papers_considered": [],
+    "tool_trace": [
+      {
+        "step": 1,
+        "type": "tool_error",
+        "tool": "react_llm",
+        "input": {
+          "iteration": 1
+        },
+        "summary": "react_llm failed",
+        "error": "ReadError: "
+      },
+      {
+        "step": 2,
+        "type": "tool_error",
+        "tool": "research_report_llm",
+        "input": {
+          "attempt": 1
+        },
+        "summary": "research_report_llm failed",
+        "error": "ReadError: "
+      },
+      {
+        "step": 3,
+        "type": "tool_error",
+        "tool": "research_report_llm",
+        "input": {
+          "attempt": 2
+        },
+        "summary": "research_report_llm failed",
+        "error": "ReadError: "
+      },
+      {
+        "step": 4,
+        "type": "report_fallback",
+        "summary": "Fell back to deterministic report rendering after report generation failure"
+      }
+    ]
+  }
+}

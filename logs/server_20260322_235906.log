@@ -1,0 +1,21 @@
+INFO:     Started server process [77856]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8010 (Press CTRL+C to quit)
+INFO:     127.0.0.1:56657 - "POST /v1/blog/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56659 - "GET /v1/blog/jobs/10d3af718cfa41cf8eec2505f6e615d3 HTTP/1.1" 200 OK
+2026-03-22 23:59:10,765 INFO httpx HTTP Request: GET https://arxiv.org/pdf/2603.10165.pdf "HTTP/1.1 301 Moved Permanently"
+2026-03-22 23:59:10,834 INFO httpx HTTP Request: GET https://arxiv.org/pdf/2603.10165 "HTTP/1.1 200 OK"
+2026-03-22 23:59:11,526 INFO httpx HTTP Request: POST http://120.92.112.87:32500/api/v1/ppt/initStyleJson "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:56665 - "GET /v1/blog/jobs/10d3af718cfa41cf8eec2505f6e615d3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56667 - "GET /v1/blog/jobs/10d3af718cfa41cf8eec2505f6e615d3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56673 - "GET /v1/blog/jobs/10d3af718cfa41cf8eec2505f6e615d3 HTTP/1.1" 200 OK
+2026-03-22 23:59:42,443 INFO httpx HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:56680 - "GET /v1/blog/jobs/10d3af718cfa41cf8eec2505f6e615d3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56695 - "GET /v1/blog/jobs/10d3af718cfa41cf8eec2505f6e615d3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56706 - "GET /v1/blog/jobs/10d3af718cfa41cf8eec2505f6e615d3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56707 - "GET /v1/blog/jobs/10d3af718cfa41cf8eec2505f6e615d3/result HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [77856]

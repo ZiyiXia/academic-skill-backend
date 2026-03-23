@@ -1,0 +1,49 @@
+INFO:     Started server process [52113]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8010 (Press CTRL+C to quit)
+INFO:     127.0.0.1:61738 - "POST /v1/blog/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61740 - "GET /v1/blog/jobs/a1a96efe12c647879a902f65562225f2 HTTP/1.1" 200 OK
+2026-03-23 10:48:14,204 INFO httpx HTTP Request: GET https://arxiv.org/pdf/2603.15726.pdf "HTTP/1.1 301 Moved Permanently"
+2026-03-23 10:48:14,269 INFO httpx HTTP Request: GET https://arxiv.org/pdf/2603.15726 "HTTP/1.1 200 OK"
+2026-03-23 10:48:14,960 INFO httpx HTTP Request: POST http://120.92.112.87:32500/api/v1/ppt/initStyleJson "HTTP/1.1 200 OK"
+2026-03-23 10:48:17,488 INFO httpx HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:61758 - "GET /v1/blog/jobs/a1a96efe12c647879a902f65562225f2 HTTP/1.1" 200 OK
+2026-03-23 10:48:30,111 INFO httpx HTTP Request: POST http://120.92.112.87:25620/api/api/retrieval/agentic_data_api/retrieve "HTTP/1.1 200 OK"
+2026-03-23 10:48:30,326 INFO httpx HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:61771 - "GET /v1/blog/jobs/a1a96efe12c647879a902f65562225f2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61778 - "GET /v1/blog/jobs/a1a96efe12c647879a902f65562225f2 HTTP/1.1" 200 OK
+2026-03-23 10:48:49,944 INFO httpx HTTP Request: POST http://120.92.112.87:25620/api/api/retrieval/agentic_data_api/retrieve "HTTP/1.1 200 OK"
+2026-03-23 10:48:50,189 INFO httpx HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:61790 - "GET /v1/blog/jobs/a1a96efe12c647879a902f65562225f2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61799 - "GET /v1/blog/jobs/a1a96efe12c647879a902f65562225f2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61806 - "GET /v1/blog/jobs/a1a96efe12c647879a902f65562225f2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61815 - "GET /v1/blog/jobs/a1a96efe12c647879a902f65562225f2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61818 - "GET /v1/blog/jobs/a1a96efe12c647879a902f65562225f2 HTTP/1.1" 200 OK
+2026-03-23 10:49:34,783 INFO httpx HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:61822 - "GET /v1/blog/jobs/a1a96efe12c647879a902f65562225f2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61827 - "GET /v1/blog/jobs/a1a96efe12c647879a902f65562225f2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61828 - "GET /v1/blog/jobs/a1a96efe12c647879a902f65562225f2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61835 - "GET /v1/blog/jobs/a1a96efe12c647879a902f65562225f2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61836 - "GET /v1/blog/jobs/a1a96efe12c647879a902f65562225f2/result HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61751 - "POST /v1/research HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61975 - "POST /v1/ppt/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61977 - "GET /v1/ppt/jobs/37bb344292fc4402963a05e888b7d9e7 HTTP/1.1" 200 OK
+2026-03-23 10:54:01,691 INFO httpx HTTP Request: POST http://120.92.112.87:32500/api/v1/ppt/createSlides "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:61987 - "GET /v1/ppt/jobs/37bb344292fc4402963a05e888b7d9e7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61996 - "GET /v1/ppt/jobs/37bb344292fc4402963a05e888b7d9e7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61998 - "GET /v1/ppt/jobs/37bb344292fc4402963a05e888b7d9e7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62000 - "GET /v1/ppt/jobs/37bb344292fc4402963a05e888b7d9e7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62005 - "GET /v1/ppt/jobs/37bb344292fc4402963a05e888b7d9e7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62013 - "GET /v1/ppt/jobs/37bb344292fc4402963a05e888b7d9e7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62015 - "GET /v1/ppt/jobs/37bb344292fc4402963a05e888b7d9e7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62021 - "GET /v1/ppt/jobs/37bb344292fc4402963a05e888b7d9e7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62022 - "GET /v1/ppt/jobs/37bb344292fc4402963a05e888b7d9e7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62024 - "GET /v1/ppt/jobs/37bb344292fc4402963a05e888b7d9e7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62026 - "GET /v1/ppt/jobs/37bb344292fc4402963a05e888b7d9e7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62027 - "GET /v1/ppt/jobs/37bb344292fc4402963a05e888b7d9e7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62030 - "GET /v1/ppt/jobs/37bb344292fc4402963a05e888b7d9e7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62040 - "GET /v1/ppt/jobs/37bb344292fc4402963a05e888b7d9e7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62045 - "GET /v1/ppt/jobs/37bb344292fc4402963a05e888b7d9e7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62048 - "GET /v1/ppt/jobs/37bb344292fc4402963a05e888b7d9e7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62052 - "GET /v1/ppt/jobs/37bb344292fc4402963a05e888b7d9e7 HTTP/1.1" 200 OK
