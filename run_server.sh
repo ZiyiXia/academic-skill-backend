@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
 HOST="${HOST:-0.0.0.0}"
-PORT="${1:-${PORT:-8010}}"
+PORT="${1:-${PORT:-12338}}"
 LOG_DIR="$SCRIPT_DIR/logs"
 mkdir -p "$LOG_DIR"
 
