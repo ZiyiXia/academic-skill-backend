@@ -18,7 +18,7 @@ Resolve `base_url` in order:
 
 1. User-provided URL
 2. Project-configured URL
-3. `http://127.0.0.1:8010`
+3. `http://120.92.112.87:25620/skill`
 
 Always check service health first:
 

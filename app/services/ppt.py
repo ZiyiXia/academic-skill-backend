@@ -18,6 +18,8 @@ from app.storage.s3 import S3Storage
 
 
 class PptService:
+    _running_tasks: set[str] = set()
+
     def __init__(self, settings: Settings, storage: S3Storage, jobs: JobService):
         self.settings = settings
         self.storage = storage
@@ -37,6 +39,20 @@ class PptService:
     def _normalize_language(self, language: Optional[str]) -> str:
         raw = (language or self.settings.slides_default_lang).strip().lower()
         return "Chinese" if raw in {"zh", "chinese"} else "English"
+
+    def _get_style_slide_count(self, raw_style_json: str) -> int:
+        try:
+            parsed = json.loads(raw_style_json)
+        except json.JSONDecodeError:
+            return 0
+        if isinstance(parsed, dict):
+            styled_slides = parsed.get("styled_slides")
+            slides = parsed.get("slides")
+            if isinstance(styled_slides, list):
+                return len(styled_slides)
+            if isinstance(slides, list):
+                return len(slides)
+        return 0
 
     async def _list_slide_items(self, paper_id: str) -> list[dict]:
         prefix = f"{self._slides_prefix(paper_id)}/"
@@ -83,96 +99,133 @@ class PptService:
         cached = await self.try_get_cached_result(paper_id, expected_count)
         if cached and not force:
             return cached
+        if paper_id in self._running_tasks:
+            raise RuntimeError("PPT generation is already in progress for this paper")
+        self._running_tasks.add(paper_id)
 
-        keys = self.blogs.keys_for(paper_id)
-        self.jobs.update_meta(meta, status="running", stage="prerequisite", message="Checking PPT prerequisites")
-        if not await self.storage.exists_async(keys["style_json"]) or not await self.storage.exists_async(keys["content_json"]):
-            await self.blogs.ensure_outline_from_existing_ocr(paper_id, meta=meta)
-        if not await self.storage.exists_async(keys["style_json"]) or not await self.storage.exists_async(keys["content_json"]):
-            await self.blogs.ensure_prerequisites(paper_id, force_init=False, meta=meta)
-        if not await self.storage.exists_async(keys["style_json"]):
-            raise RuntimeError("Missing prerequisite style_content.json")
-        style_content_json = await self.storage.read_text_async(keys["style_json"])
-        if not style_content_json.strip():
-            raise RuntimeError("style_content.json is empty")
+        try:
+            keys = self.blogs.keys_for(paper_id)
+            self.jobs.update_meta(meta, status="running", stage="prerequisite", message="Checking PPT prerequisites")
 
-        slides_prefix = self._slides_prefix(paper_id)
-        slide_paths = [self._slide_key(paper_id, index + 1) for index in range(expected_count)]
-        payload = {
-            "taskId": f"slides-{paper_id.replace('/', '-')}-{int(datetime.now(timezone.utc).timestamp())}",
-            "version": 1,
-            "styleContentJson": style_content_json,
-            "textPrompt": f"{self._normalize_language(language)} academic style",
-            "slideCount": expected_count,
-            "slideToSavePaths": slide_paths,
-            "styleContentJsonToSave": self._style_content_key(paper_id),
-        }
+            style_json_exists = await self.storage.exists_async(keys["style_json"])
+            content_json_exists = await self.storage.exists_async(keys["content_json"])
+            should_regenerate_prerequisites = not style_json_exists
+            style_content_json = ""
 
-        async with httpx.AsyncClient(timeout=None) as client:
-            self.jobs.update_meta(meta, status="running", stage="init", message="Calling createSlides upstream")
-            async with client.stream(
-                "POST",
-                self.settings.ppt_create_url,
-                json=payload,
-                headers={"Accept": "text/event-stream", "Content-Type": "application/json"},
-            ) as response:
-                response.raise_for_status()
-                line_iter = response.aiter_lines().__aiter__()
-                saw_terminal_event = False
-                # Fail fast when upstream keeps the stream open but does not emit data.
-                no_event_timeout_sec = 600
-
-                while True:
-                    try:
-                        line = await asyncio.wait_for(line_iter.__anext__(), timeout=no_event_timeout_sec)
-                    except StopAsyncIteration:
-                        break
-                    except asyncio.TimeoutError as exc:
-                        raise RuntimeError(
-                            f"createSlides upstream stalled: no SSE event for {no_event_timeout_sec}s"
-                        ) from exc
-
-                    if not line.startswith("data:"):
-                        continue
-                    raw = line.replace("data:", "", 1).strip()
-                    if not raw:
-                        continue
-                    try:
-                        event = json.loads(raw)
-                    except json.JSONDecodeError:
-                        continue
-                    stage = str(event.get("stage", ""))
-                    event_name = str(event.get("event", "progress"))
-                    message = str(event.get("message") or event.get("content") or "")
-                    upstream_progress = event.get("progress")
+            if style_json_exists:
+                style_content_json = await self.storage.read_text_async(keys["style_json"])
+                existing_style_slides = self._get_style_slide_count(style_content_json)
+                if existing_style_slides > 0 and existing_style_slides < expected_count:
+                    should_regenerate_prerequisites = True
                     self.jobs.update_meta(
                         meta,
                         status="running",
-                        stage=stage or "running",
-                        message=message or None,
-                        upstream_progress=float(upstream_progress) if isinstance(upstream_progress, (int, float)) else None,
+                        stage="prerequisite",
+                        message=f"Existing style_content has {existing_style_slides} slides (< {expected_count}); regenerating prerequisites",
                     )
-                    if event_name == "error":
-                        raise RuntimeError(message or "Slides generation failed")
-                    if event_name == "result" or stage == "complete":
-                        saw_terminal_event = True
-                        break
 
-                if not saw_terminal_event:
-                    raise RuntimeError("createSlides stream ended without a completion event")
+            if not content_json_exists:
+                should_regenerate_prerequisites = True
+                self.jobs.update_meta(
+                    meta,
+                    status="running",
+                    stage="prerequisite",
+                    message="content.json is missing; regenerating prerequisites",
+                )
 
-        self.jobs.update_meta(meta, status="running", stage="verify", message="Waiting for slide outputs in S3")
-        slides = await self._wait_for_slides(paper_id, expected_count)
-        if len(slides) < expected_count:
-            raise RuntimeError(f"Slides output incomplete. Expected {expected_count}, got {len(slides)}")
+            if should_regenerate_prerequisites:
+                self.jobs.update_meta(
+                    meta,
+                    status="running",
+                    stage="prerequisite",
+                    message="Running initStyleJson flow for PPT prerequisites",
+                )
+                await self.blogs.ensure_prerequisites(paper_id, force_init=True, meta=meta)
+                if not await self.storage.exists_async(keys["style_json"]):
+                    raise RuntimeError("Missing usable style_content.json after prerequisite generation")
+                style_content_json = await self.storage.read_text_async(keys["style_json"])
 
-        return {
-            "paper_id": paper_id,
-            "generated_at": datetime.now(timezone.utc).isoformat(),
-            "slides_prefix": slides_prefix,
-            "slides": slides,
-            "style_content_s3_key": self._style_content_key(paper_id) if await self.storage.exists_async(self._style_content_key(paper_id)) else None,
-        }
+            if not style_content_json.strip():
+                raise RuntimeError("style_content.json is empty")
+
+            slides_prefix = self._slides_prefix(paper_id)
+            slide_paths = [self._slide_key(paper_id, index + 1) for index in range(expected_count)]
+            payload = {
+                "taskId": f"slides-{paper_id.replace('/', '-')}-{int(datetime.now(timezone.utc).timestamp())}",
+                "version": 1,
+                "styleContentJson": style_content_json,
+                "textPrompt": f"{self._normalize_language(language)} academic style",
+                "slideCount": expected_count,
+                "slideToSavePaths": slide_paths,
+                "styleContentJsonToSave": self._style_content_key(paper_id),
+            }
+
+            async with httpx.AsyncClient(timeout=None) as client:
+                self.jobs.update_meta(meta, status="running", stage="init", message="Calling createSlides upstream")
+                async with client.stream(
+                    "POST",
+                    self.settings.ppt_create_url,
+                    json=payload,
+                    headers={"Accept": "text/event-stream", "Content-Type": "application/json"},
+                ) as response:
+                    response.raise_for_status()
+                    line_iter = response.aiter_lines().__aiter__()
+                    saw_terminal_event = False
+                    no_event_timeout_sec = 600
+
+                    while True:
+                        try:
+                            line = await asyncio.wait_for(line_iter.__anext__(), timeout=no_event_timeout_sec)
+                        except StopAsyncIteration:
+                            break
+                        except asyncio.TimeoutError as exc:
+                            raise RuntimeError(
+                                f"createSlides upstream stalled: no SSE event for {no_event_timeout_sec}s"
+                            ) from exc
+
+                        if not line.startswith("data:"):
+                            continue
+                        raw = line.replace("data:", "", 1).strip()
+                        if not raw:
+                            continue
+                        try:
+                            event = json.loads(raw)
+                        except json.JSONDecodeError:
+                            continue
+                        stage = str(event.get("stage", ""))
+                        event_name = str(event.get("event", "progress"))
+                        message = str(event.get("message") or event.get("content") or "")
+                        upstream_progress = event.get("progress")
+                        self.jobs.update_meta(
+                            meta,
+                            status="running",
+                            stage=stage or "running",
+                            message=message or None,
+                            upstream_progress=float(upstream_progress) if isinstance(upstream_progress, (int, float)) else None,
+                        )
+                        if event_name == "error":
+                            raise RuntimeError(message or "Slides generation failed")
+                        if event_name == "result" or stage == "complete":
+                            saw_terminal_event = True
+                            break
+
+                    if not saw_terminal_event:
+                        raise RuntimeError("createSlides stream ended without a completion event")
+
+            self.jobs.update_meta(meta, status="running", stage="verify", message="Waiting for slide outputs in S3")
+            slides = await self._wait_for_slides(paper_id, expected_count)
+            if len(slides) < expected_count:
+                raise RuntimeError(f"Slides output incomplete. Expected {expected_count}, got {len(slides)}")
+
+            return {
+                "paper_id": paper_id,
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "slides_prefix": slides_prefix,
+                "slides": slides,
+                "style_content_s3_key": self._style_content_key(paper_id) if await self.storage.exists_async(self._style_content_key(paper_id)) else None,
+            }
+        finally:
+            self._running_tasks.discard(paper_id)
 
     async def create_job(self, payload: CreatePptJobRequest) -> JobCreatedResponse:
         paper_id = self.blogs.normalize_paper_id(payload.paper_id)
