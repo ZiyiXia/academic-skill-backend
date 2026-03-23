@@ -74,7 +74,13 @@ class ResearchService:
                 raw_args = tool_call["function"].get("arguments") or "{}"
                 args = self._parse_args(raw_args)
                 try:
-                    result = await self._execute_tool(tool_name, args, papers, evidence_bank)
+                    result = await self._execute_tool(
+                        tool_name,
+                        args,
+                        papers,
+                        evidence_bank,
+                        default_search_top_k=payload.search_top_k,
+                    )
                     trace.append({
                         "step": len(trace) + 1,
                         "type": "tool",
@@ -223,12 +229,17 @@ class ResearchService:
         args: dict[str, Any],
         papers: dict[str, dict[str, Any]],
         evidence_bank: list[dict[str, Any]],
+        *,
+        default_search_top_k: int,
     ) -> dict[str, Any]:
         if tool_name == "search_papers":
-            query = str(args.get("query") or "").strip()
+            search_args = dict(args)
+            if search_args.get("top_k") is None:
+                search_args["top_k"] = default_search_top_k
+            query = str(search_args.get("query") or "").strip()
             if not query:
                 raise ValueError("query is required")
-            result = await self._search_papers(args)
+            result = await self._search_papers(search_args)
             self._merge_search_results(papers, result, source_query=query)
             return {"ok": True, **result}
 

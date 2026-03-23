@@ -1,5 +1,6 @@
 import json
 import asyncio
+import time
 from collections.abc import Iterable
 from typing import Any, Optional
 
@@ -20,6 +21,11 @@ class S3Storage:
                 connect_timeout=10,
                 read_timeout=300,
                 retries={"max_attempts": 3, "mode": "standard"},
+                # Some S3-compatible gateways return non-AWS checksum headers.
+                # Restrict checksum behavior to explicitly required cases to avoid
+                # false mismatch errors on put/get object.
+                request_checksum_calculation="when_required",
+                response_checksum_validation="when_required",
             ),
         }
         if settings.s3_endpoint:

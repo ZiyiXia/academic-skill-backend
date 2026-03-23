@@ -239,7 +239,7 @@ async def run_live_test(query: str, base_url: str, timeout_sec: float, output_di
 
 async def main() -> int:
     parser = argparse.ArgumentParser(description="Test the research flow.")
-    parser.add_argument("--query", default="I want to train my model for multi-round retrieval ability, what datasets can I use? I don't want those classic datasets released before 2022.")
+    parser.add_argument("--query", default="Please help me find papers that propose new reinforcement learning algorithms which are direct, further optimizations of GRPO itself, rather than algorithms that apply the idea of GRPO to other scenarios or tasks.")
     parser.add_argument("--live", action="store_true", help="Call the running local API instead of the mocked service.")
     parser.add_argument("--base-url", default="http://127.0.0.1:8010")
     parser.add_argument("--timeout", type=float, default=600.0)

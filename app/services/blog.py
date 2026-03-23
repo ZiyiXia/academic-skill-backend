@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import hashlib
 import json
 import re
 from datetime import datetime, timezone
@@ -69,10 +68,10 @@ class BlogService:
 
     async def _wait_for_prerequisites(self, keys: dict[str, str], timeout_sec: int = 180) -> bool:
         for _ in range(max(1, timeout_sec // 6)):
-            if await self.storage.exists_async(keys["content_json"]) and await self.storage.exists_async(keys["style_json"]):
+            if await self._prerequisite_artifacts_ready(keys):
                 return True
             await asyncio.sleep(6)
-        return await self.storage.exists_async(keys["content_json"]) and await self.storage.exists_async(keys["style_json"])
+        return await self._prerequisite_artifacts_ready(keys)
 
     async def _ocr_artifacts_ready(self, keys: dict[str, str]) -> bool:
         if not await self.storage.exists_async(keys["full_text"]):
@@ -300,14 +299,14 @@ class BlogService:
         if not await self.storage.exists_async(keys["blog_markdown"]):
             return None
         markdown = await self.storage.read_text_async(keys["blog_markdown"])
-        meta = await self.storage.read_json_async(keys["blog_meta"]) if await self.storage.exists_async(keys["blog_meta"]) else {}
+        has_meta = await self.storage.exists_async(keys["blog_meta"])
+        meta = await self.storage.read_json_async(keys["blog_meta"]) if has_meta else {}
         return {
             "paper_id": paper_id,
             "markdown": markdown,
             "generated_at": meta.get("generated_at"),
             "markdown_s3_key": keys["blog_markdown"],
-            "meta_s3_key": keys["blog_meta"] if await self.storage.exists_async(keys["blog_meta"]) else None,
-            "content_hash": hashlib.sha256(markdown.encode("utf-8")).hexdigest(),
+            "meta_s3_key": keys["blog_meta"] if has_meta else None,
         }
 
     async def _run_job(self, meta: JobMeta, *, force: bool = False) -> dict:

@@ -38,6 +38,27 @@ class FakeStorage:
     def list_keys(self, prefix: str) -> list[str]:
         return [key for key in self.objects if key.startswith(prefix)]
 
+    async def exists_async(self, key: str) -> bool:
+        return self.exists(key)
+
+    async def read_text_async(self, key: str) -> str:
+        return self.read_text(key)
+
+    async def write_text_async(self, key: str, content: str, content_type: str = "text/plain; charset=utf-8") -> None:
+        self.write_text(key, content, content_type)
+
+    async def write_json_async(self, key: str, payload: dict) -> None:
+        self.write_json(key, payload)
+
+    async def read_json_async(self, key: str) -> dict:
+        return self.read_json(key)
+
+    async def upload_bytes_with_retry_async(self, key: str, data: bytes, content_type: str, *, attempts: int = 4, backoff_sec: float = 2.0) -> None:
+        self.upload_bytes(key, data, content_type)
+
+    async def list_keys_async(self, prefix: str) -> list[str]:
+        return self.list_keys(prefix)
+
 
 def build_settings() -> Settings:
     return Settings(
@@ -72,51 +93,62 @@ def build_settings() -> Settings:
 @pytest.mark.asyncio
 async def test_research_generates_report_with_mocked_tools(monkeypatch):
     service = ResearchService(build_settings())
-    llm_responses = iter([
+    react_messages = iter([
         {
-            "goal": "Study transformer scaling",
-            "angle": "Focus on representative methods and bottlenecks",
-            "sub_questions": ["What methods dominate?", "What are the main bottlenecks?"],
-            "search_queries": ["transformer scaling", "transformer scaling limitations"],
-            "focus_aspects": ["methods", "limitations"],
-            "finish_criteria": ["Enough evidence collected"],
-        },
-        {
-            "action": "inspect",
-            "arxiv_id": "1706.03762",
-            "inspect_type": "brief",
-            "why": "Need a representative landmark paper",
-        },
-        {
-            "action": "finish",
-            "reason": "Enough evidence collected",
-        },
-        {
-            "title": "Transformer Scaling Report",
-            "executive_summary": "Transformers remain dominant but face efficiency bottlenecks.",
-            "key_findings": ["Transformers remain dominant.", "Efficiency is a bottleneck."],
-            "sections": [{"heading": "Landscape", "content": "Transformers dominate the area."}],
-            "notable_papers": [
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
                 {
-                    "arxiv_id": "1706.03762",
-                    "title": "Attention Is All You Need",
-                    "contribution": "Introduced the Transformer.",
-                    "evidence": ["Transformer replaces recurrence with attention."],
+                    "id": "call_search_1",
+                    "type": "function",
+                    "function": {
+                        "name": "search_papers",
+                        "arguments": '{"query":"transformer scaling"}',
+                    },
                 }
             ],
-            "limitations": ["Limited to retrieved evidence."],
-            "follow_up_questions": ["How do scaling laws differ across domains?"],
-            "markdown": "# Transformer Scaling Report",
+        },
+        {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+                {
+                    "id": "call_brief_1",
+                    "type": "function",
+                    "function": {
+                        "name": "get_paper_brief",
+                        "arguments": '{"arxiv_id":"1706.03762"}',
+                    },
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": "I have enough evidence to write the report.",
         },
     ])
 
-    async def fake_complete_json(system_prompt: str, user_prompt: str):
-        return next(llm_responses)
+    async def fake_chat_completion(*, messages, tools=None, tool_choice=None):
+        return next(react_messages)
 
-    async def fake_search_papers(query: str, top_k: int):
+    async def fake_chat_completion_text(messages):
+        return (
+            "{"
+            '"title":"Transformer Scaling Report",'
+            '"markdown":"# Transformer Scaling Report\\n\\n'
+            'Transformers remain dominant but face efficiency bottlenecks. '
+            'This mocked report is intentionally long enough to pass markdown length checks. '
+            'It summarizes representative methods, tradeoffs, and limitations in current scaling practice. '
+            'Attention Is All You Need remains a foundational reference and later work focuses on efficiency, '
+            'context extension, and systems-level optimization for large-scale training and inference. '
+            'The report also emphasizes data quality and evaluation protocol design as practical bottlenecks."'
+            "}"
+        )
+
+    async def fake_search_papers(search_query_args: dict):
         return {
             "status": "success",
-            "query": query,
+            "query": search_query_args["query"],
             "total": 1,
             "items": [
                 {
@@ -140,15 +172,17 @@ async def test_research_generates_report_with_mocked_tools(monkeypatch):
             "tldr": "Transformer replaces recurrence with attention mechanisms.",
         }
 
-    monkeypatch.setattr(service, "_complete_json", fake_complete_json)
+    monkeypatch.setattr(service, "_chat_completion", fake_chat_completion)
+    monkeypatch.setattr(service, "_chat_completion_text", fake_chat_completion_text)
     monkeypatch.setattr(service, "_search_papers", fake_search_papers)
     monkeypatch.setattr(service, "_inspect_paper", fake_inspect_paper)
 
     result = await service.run(ResearchRequest(query="transformer scaling"))
     assert result.status == "success"
     assert result.report["title"] == "Transformer Scaling Report"
-    assert result.report["tool_trace"][1]["tool"] == "search"
-    assert result.report["tool_trace"][3]["tool"] == "arxiv:brief"
+    tool_steps = [step for step in result.report["tool_trace"] if step.get("type") == "tool"]
+    assert tool_steps[0]["tool"] == "search_papers"
+    assert tool_steps[1]["tool"] == "get_paper_brief"
 
 
 @pytest.mark.asyncio
@@ -192,12 +226,12 @@ async def test_ppt_uses_recreate_outline_when_outline_artifacts_are_missing(monk
     keys = service.blogs.keys_for("1234.5678")
     calls = {"recreate": 0, "ensure": 0}
 
-    async def fake_recreate(paper_id: str) -> None:
+    async def fake_recreate(paper_id: str, meta=None) -> None:
         calls["recreate"] += 1
         storage.write_text(keys["style_json"], "{\"slides\": []}")
         storage.write_text(keys["content_json"], "{\"slides\": []}")
 
-    async def fake_ensure(paper_id: str, *, force_init: bool = False) -> None:
+    async def fake_ensure(paper_id: str, *, force_init: bool = False, meta=None) -> None:
         calls["ensure"] += 1
 
     async def fake_wait_for_slides(paper_id: str, expected_count: int, attempts: int = 15, interval_sec: int = 2) -> list[dict]:
@@ -210,6 +244,13 @@ async def test_ppt_uses_recreate_outline_when_outline_artifacts_are_missing(monk
         async def aiter_lines(self):
             yield 'data: {"event":"result","stage":"complete"}'
 
+    class FakeStream:
+        async def __aenter__(self):
+            return FakeResponse()
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
     class FakeClient:
         def __init__(self, *args, **kwargs):
             pass
@@ -220,8 +261,8 @@ async def test_ppt_uses_recreate_outline_when_outline_artifacts_are_missing(monk
         async def __aexit__(self, exc_type, exc, tb):
             return False
 
-        async def post(self, *args, **kwargs):
-            return FakeResponse()
+        def stream(self, *args, **kwargs):
+            return FakeStream()
 
     monkeypatch.setattr(service.blogs, "ensure_outline_from_existing_ocr", fake_recreate)
     monkeypatch.setattr(service.blogs, "ensure_prerequisites", fake_ensure)

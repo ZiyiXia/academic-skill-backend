@@ -1,0 +1,4 @@
+interface:
+  display_name: "Academic Research"
+  short_description: "Search papers and generate blog or PPT."
+  default_prompt: "Use $academic-research to search papers or generate a paper blog or PPT from an arXiv ID."

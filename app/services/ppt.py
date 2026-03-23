@@ -57,15 +57,16 @@ class PptService:
         if len(slides) < expected_count:
             return None
         style_content_s3_key = self._style_content_key(paper_id)
+        has_style_content = await self.storage.exists_async(style_content_s3_key)
         generated_at = None
-        if await self.storage.exists_async(style_content_s3_key):
+        if has_style_content:
             generated_at = datetime.now(timezone.utc).isoformat()
         return {
             "paper_id": paper_id,
             "generated_at": generated_at,
             "slides_prefix": self._slides_prefix(paper_id),
             "slides": slides,
-            "style_content_s3_key": style_content_s3_key if await self.storage.exists_async(style_content_s3_key) else None,
+            "style_content_s3_key": style_content_s3_key if has_style_content else None,
         }
 
     async def _wait_for_slides(self, paper_id: str, expected_count: int, attempts: int = 15, interval_sec: int = 2) -> list[dict]:
@@ -109,37 +110,56 @@ class PptService:
 
         async with httpx.AsyncClient(timeout=None) as client:
             self.jobs.update_meta(meta, status="running", stage="init", message="Calling createSlides upstream")
-            response = await client.post(
+            async with client.stream(
+                "POST",
                 self.settings.ppt_create_url,
                 json=payload,
                 headers={"Accept": "text/event-stream", "Content-Type": "application/json"},
-            )
-            response.raise_for_status()
-            async for line in response.aiter_lines():
-                if not line.startswith("data:"):
-                    continue
-                raw = line.replace("data:", "", 1).strip()
-                if not raw:
-                    continue
-                try:
-                    event = json.loads(raw)
-                except json.JSONDecodeError:
-                    continue
-                stage = str(event.get("stage", ""))
-                event_name = str(event.get("event", "progress"))
-                message = str(event.get("message") or event.get("content") or "")
-                upstream_progress = event.get("progress")
-                self.jobs.update_meta(
-                    meta,
-                    status="running",
-                    stage=stage or "running",
-                    message=message or None,
-                    upstream_progress=float(upstream_progress) if isinstance(upstream_progress, (int, float)) else None,
-                )
-                if event_name == "error":
-                    raise RuntimeError(message or "Slides generation failed")
-                if event_name == "result" or stage == "complete":
-                    break
+            ) as response:
+                response.raise_for_status()
+                line_iter = response.aiter_lines().__aiter__()
+                saw_terminal_event = False
+                # Fail fast when upstream keeps the stream open but does not emit data.
+                no_event_timeout_sec = 600
+
+                while True:
+                    try:
+                        line = await asyncio.wait_for(line_iter.__anext__(), timeout=no_event_timeout_sec)
+                    except StopAsyncIteration:
+                        break
+                    except asyncio.TimeoutError as exc:
+                        raise RuntimeError(
+                            f"createSlides upstream stalled: no SSE event for {no_event_timeout_sec}s"
+                        ) from exc
+
+                    if not line.startswith("data:"):
+                        continue
+                    raw = line.replace("data:", "", 1).strip()
+                    if not raw:
+                        continue
+                    try:
+                        event = json.loads(raw)
+                    except json.JSONDecodeError:
+                        continue
+                    stage = str(event.get("stage", ""))
+                    event_name = str(event.get("event", "progress"))
+                    message = str(event.get("message") or event.get("content") or "")
+                    upstream_progress = event.get("progress")
+                    self.jobs.update_meta(
+                        meta,
+                        status="running",
+                        stage=stage or "running",
+                        message=message or None,
+                        upstream_progress=float(upstream_progress) if isinstance(upstream_progress, (int, float)) else None,
+                    )
+                    if event_name == "error":
+                        raise RuntimeError(message or "Slides generation failed")
+                    if event_name == "result" or stage == "complete":
+                        saw_terminal_event = True
+                        break
+
+                if not saw_terminal_event:
+                    raise RuntimeError("createSlides stream ended without a completion event")
 
         self.jobs.update_meta(meta, status="running", stage="verify", message="Waiting for slide outputs in S3")
         slides = await self._wait_for_slides(paper_id, expected_count)
