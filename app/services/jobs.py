@@ -55,11 +55,23 @@ class JobService:
             meta.model_dump(mode="json"),
         )
 
+    async def save_meta_async(self, meta: JobMeta) -> None:
+        await self.storage.write_json_async(
+            self._job_key(meta.job_type, meta.job_id),
+            meta.model_dump(mode="json"),
+        )
+
     def load_meta(self, job_type: JobType, job_id: str) -> JobMeta:
         key = self._job_key(job_type, job_id)
         if not self.storage.exists(key):
             raise HTTPException(status_code=404, detail="Job not found")
         return JobMeta.model_validate(self.storage.read_json(key))
+
+    async def load_meta_async(self, job_type: JobType, job_id: str) -> JobMeta:
+        key = self._job_key(job_type, job_id)
+        if not await self.storage.exists_async(key):
+            raise HTTPException(status_code=404, detail="Job not found")
+        return JobMeta.model_validate(await self.storage.read_json_async(key))
 
     def update_meta(
         self,
@@ -92,21 +104,50 @@ class JobService:
         self.save_meta(updated)
         return updated
 
+    async def update_meta_async(
+        self,
+        meta: JobMeta,
+        *,
+        status: Optional[JobStatus] = None,
+        progress: Optional[int] = None,
+        stage: Optional[str] = None,
+        message: Optional[str] = None,
+        upstream_progress: Optional[float] = None,
+        result: Optional[dict] = None,
+        error_message: Optional[str] = None,
+    ) -> JobMeta:
+        try:
+            current = await self.load_meta_async(meta.job_type, meta.job_id)
+        except HTTPException:
+            current = meta
+        updated = current.model_copy(
+            update={
+                "status": status or current.status,
+                "progress": current.progress if progress is None else progress,
+                "stage": current.stage if stage is None else stage,
+                "message": current.message if message is None else message,
+                "upstream_progress": current.upstream_progress if upstream_progress is None else upstream_progress,
+                "result": current.result if result is None else result,
+                "error_message": current.error_message if error_message is None else error_message,
+                "updated_at": datetime.now(timezone.utc),
+            }
+        )
+        await self.save_meta_async(updated)
+        return updated
+
     def spawn(
         self,
         meta: JobMeta,
         worker: Callable[[JobMeta], Awaitable[dict]],
     ) -> JobCreatedResponse:
-        self.save_meta(meta)
-
         async def runner() -> None:
-            current = self.update_meta(meta, status="running", progress=5, stage="init", message="Job started", error_message=None)
+            current = await self.update_meta_async(meta, status="running", progress=5, stage="init", message="Job started", error_message=None)
             try:
                 result = await worker(current)
-                self.update_meta(current, status="succeeded", progress=100, stage="complete", message="Job completed", result=result, error_message=None)
+                await self.update_meta_async(current, status="succeeded", progress=100, stage="complete", message="Job completed", result=result, error_message=None)
             except Exception as exc:
                 error_text = str(exc).strip() or f"{type(exc).__name__}: {repr(exc)}"
-                self.update_meta(current, status="failed", progress=current.progress, message=error_text, error_message=error_text)
+                await self.update_meta_async(current, status="failed", progress=current.progress, message=error_text, error_message=error_text)
 
         asyncio.create_task(runner())
         return JobCreatedResponse(

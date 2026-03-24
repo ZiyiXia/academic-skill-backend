@@ -50,6 +50,16 @@ if ! "$PYTHON_BIN" -c "import fastapi, uvicorn, httpx, boto3, dotenv" >/dev/null
   exit 1
 fi
 
+if command -v lsof >/dev/null 2>&1; then
+  EXISTING_LISTENER="$(lsof -iTCP:"$PORT" -sTCP:LISTEN -n -P 2>/dev/null || true)"
+  if [ -n "$EXISTING_LISTENER" ]; then
+    echo "Port $PORT is already in use."
+    echo "$EXISTING_LISTENER"
+    echo "Use another port, for example: ./run_server.sh 8020"
+    exit 1
+  fi
+fi
+
 ln -sf "$LOG_FILE" "$LATEST_LOG"
 export PYTHONUNBUFFERED=1
 

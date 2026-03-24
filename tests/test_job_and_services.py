@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timezone
 
 import pytest
@@ -229,6 +230,49 @@ async def test_blog_result_returns_presigned_download_url():
     assert result.paper_id == "1234.5678"
     assert result.expires_in_seconds == 1800
     assert result.download_url.endswith("deepxiv/blogs/1234.5678/blog/blog.md?expires=1800")
+
+
+@pytest.mark.asyncio
+async def test_blog_reuses_running_job_id(monkeypatch):
+    settings = build_settings()
+    storage = FakeStorage()
+    jobs = JobService(storage, settings)
+    service = BlogService(settings, storage, jobs)
+    blocker = asyncio.Event()
+
+    async def fake_run_job(meta, *, force: bool = False):
+        await blocker.wait()
+        return {
+            "paper_id": meta.paper_id,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "markdown_s3_key": service.keys_for(meta.paper_id)["blog_markdown"],
+        }
+
+    monkeypatch.setattr(service, "_run_job", fake_run_job)
+
+    first = await service.create_job(CreateBlogJobRequest(paper_id="1234.5678", force=True))
+    second = await service.create_job(CreateBlogJobRequest(paper_id="1234.5678", force=True))
+
+    assert first.job_id == second.job_id
+    blocker.set()
+    await asyncio.sleep(0)
+
+
+@pytest.mark.asyncio
+async def test_blog_create_job_persists_meta_before_return():
+    settings = build_settings()
+    storage = FakeStorage()
+    jobs = JobService(storage, settings)
+    service = BlogService(settings, storage, jobs)
+    keys = service.keys_for("1234.5678")
+    storage.write_text(keys["blog_markdown"], "# Blog")
+    storage.write_json(keys["blog_meta"], {"generated_at": datetime.now(timezone.utc).isoformat()})
+
+    created = await service.create_job(CreateBlogJobRequest(paper_id="1234.5678"))
+    detail = await service.get_job(created.job_id)
+
+    assert detail.job_id == created.job_id
+    assert detail.status == "succeeded"
 
 
 @pytest.mark.asyncio

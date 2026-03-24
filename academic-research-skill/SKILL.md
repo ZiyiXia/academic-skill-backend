@@ -66,7 +66,9 @@ Create an async job that generates a paper blog markdown artifact and exposes it
 - Required: `paper_id`
 - Optional: `force` (default `false`)
 
-Final result key fields:
+`GET /jobs/{job_id}/result`
+
+Final result key fields when generation done:
 
 - `download_url`
 - `expires_in_seconds`
@@ -80,6 +82,8 @@ Create an async job that generates paper presentation slides and returns slide a
 
 - Required: `paper_id`
 - Optional: `force` (default `false`), `slide_count` (1..30), `language`
+
+`GET /jobs/{job_id}/result`
 
 Final result key fields:
 

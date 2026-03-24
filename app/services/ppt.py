@@ -105,7 +105,7 @@ class PptService:
 
         try:
             keys = self.blogs.keys_for(paper_id)
-            self.jobs.update_meta(meta, status="running", stage="prerequisite", message="Checking PPT prerequisites")
+            await self.jobs.update_meta_async(meta, status="running", stage="prerequisite", message="Checking PPT prerequisites")
 
             style_json_exists = await self.storage.exists_async(keys["style_json"])
             content_json_exists = await self.storage.exists_async(keys["content_json"])
@@ -117,7 +117,7 @@ class PptService:
                 existing_style_slides = self._get_style_slide_count(style_content_json)
                 if existing_style_slides > 0 and existing_style_slides < expected_count:
                     should_regenerate_prerequisites = True
-                    self.jobs.update_meta(
+                    await self.jobs.update_meta_async(
                         meta,
                         status="running",
                         stage="prerequisite",
@@ -126,7 +126,7 @@ class PptService:
 
             if not content_json_exists:
                 should_regenerate_prerequisites = True
-                self.jobs.update_meta(
+                await self.jobs.update_meta_async(
                     meta,
                     status="running",
                     stage="prerequisite",
@@ -134,7 +134,7 @@ class PptService:
                 )
 
             if should_regenerate_prerequisites:
-                self.jobs.update_meta(
+                await self.jobs.update_meta_async(
                     meta,
                     status="running",
                     stage="prerequisite",
@@ -161,7 +161,7 @@ class PptService:
             }
 
             async with httpx.AsyncClient(timeout=None) as client:
-                self.jobs.update_meta(meta, status="running", stage="init", message="Calling createSlides upstream")
+                await self.jobs.update_meta_async(meta, status="running", stage="init", message="Calling createSlides upstream")
                 async with client.stream(
                     "POST",
                     self.settings.ppt_create_url,
@@ -196,7 +196,7 @@ class PptService:
                         event_name = str(event.get("event", "progress"))
                         message = str(event.get("message") or event.get("content") or "")
                         upstream_progress = event.get("progress")
-                        self.jobs.update_meta(
+                        await self.jobs.update_meta_async(
                             meta,
                             status="running",
                             stage=stage or "running",
@@ -212,7 +212,7 @@ class PptService:
                     if not saw_terminal_event:
                         raise RuntimeError("createSlides stream ended without a completion event")
 
-            self.jobs.update_meta(meta, status="running", stage="verify", message="Waiting for slide outputs in S3")
+            await self.jobs.update_meta_async(meta, status="running", stage="verify", message="Waiting for slide outputs in S3")
             slides = await self._wait_for_slides(paper_id, expected_count)
             if len(slides) < expected_count:
                 raise RuntimeError(f"Slides output incomplete. Expected {expected_count}, got {len(slides)}")
@@ -233,18 +233,19 @@ class PptService:
         cached = await self.try_get_cached_result(paper_id, expected_count)
         if cached and not payload.force:
             meta = self.jobs.create_meta("ppt", paper_id, status="succeeded", progress=100, stage="complete", message="Reused cached PPT result", result=cached)
-            self.jobs.save_meta(meta)
+            await self.jobs.save_meta_async(meta)
             return JobCreatedResponse(job_id=meta.job_id, job_type=meta.job_type, status=meta.status, progress=meta.progress, stage=meta.stage, message=meta.message, upstream_progress=meta.upstream_progress)
 
         meta = self.jobs.create_meta("ppt", paper_id)
+        await self.jobs.save_meta_async(meta)
         return self.jobs.spawn(meta, lambda job_meta: self._run_job(job_meta, language=payload.language, slide_count=payload.slide_count, force=payload.force))
 
     async def get_job(self, job_id: str) -> JobDetailResponse:
-        meta = self.jobs.load_meta("ppt", job_id)
+        meta = await self.jobs.load_meta_async("ppt", job_id)
         return self.jobs.to_detail(meta)
 
     async def get_result(self, job_id: str) -> PptResultResponse:
-        meta = self.jobs.load_meta("ppt", job_id)
+        meta = await self.jobs.load_meta_async("ppt", job_id)
         if meta.status != "succeeded" or not meta.result:
             raise HTTPException(status_code=409, detail="PPT result is not ready")
         return PptResultResponse(

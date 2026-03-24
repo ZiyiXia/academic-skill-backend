@@ -23,6 +23,7 @@ RAW_IMAGE_REGEX = re.compile(r"\bimgs\/[^\s)\"']+")
 
 class BlogService:
     MAX_FULL_TEXT_CHARS = 220_000
+    _running_tasks: dict[str, str] = {}
 
     def __init__(self, settings: Settings, storage: S3Storage, jobs: JobService):
         self.settings = settings
@@ -132,9 +133,10 @@ class BlogService:
             error_message="initStyleJson failed",
             until_ready=self._ocr_artifacts_ready if return_on_ocr_ready else self._prerequisite_artifacts_ready,
             keys=keys,
-            timeout_loops=45 if return_on_ocr_ready else 90,
+            timeout_loops=105 if return_on_ocr_ready else 90,
             timeout_error="OCR artifacts were not ready before blog timeout window" if return_on_ocr_ready else "initStyleJson completed without writing content/style artifacts",
             meta=meta,
+            require_stage_progress=45.0 if return_on_ocr_ready else None,
         )
 
     async def _stream_upstream_sse(
@@ -148,6 +150,7 @@ class BlogService:
         timeout_loops: int,
         timeout_error: str,
         meta: Optional[JobMeta] = None,
+        require_stage_progress: Optional[float] = None,
     ) -> None:
         async with httpx.AsyncClient(timeout=None) as client:
             async with client.stream(
@@ -175,7 +178,7 @@ class BlogService:
                         state["message"] = str(event.get("message") or event.get("content") or "")
                         state["progress"] = event.get("progress")
                         if meta is not None:
-                            self.jobs.update_meta(
+                            await self.jobs.update_meta_async(
                                 meta,
                                 status="running",
                                 stage=state["stage"] or "running",
@@ -188,7 +191,13 @@ class BlogService:
                 consumer = asyncio.create_task(consume_stream())
                 try:
                     for _ in range(timeout_loops):
-                        if await until_ready(keys):
+                        ready = await until_ready(keys)
+                        stage_progress = state.get("progress")
+                        stage_progress_ok = (
+                            require_stage_progress is None or
+                            (isinstance(stage_progress, (int, float)) and float(stage_progress) >= require_stage_progress)
+                        )
+                        if ready and stage_progress_ok:
                             return
                         if consumer.done():
                             exc = consumer.exception()
@@ -198,7 +207,13 @@ class BlogService:
                                 break
                         await asyncio.sleep(4)
 
-                    if await until_ready(keys):
+                    ready = await until_ready(keys)
+                    stage_progress = state.get("progress")
+                    stage_progress_ok = (
+                        require_stage_progress is None or
+                        (isinstance(stage_progress, (int, float)) and float(stage_progress) >= require_stage_progress)
+                    )
+                    if ready and stage_progress_ok:
                         return
                     raise RuntimeError(timeout_error)
                 finally:
@@ -316,53 +331,81 @@ class BlogService:
         if cached and not force:
             return cached
 
-        self.jobs.update_meta(meta, status="running", stage="download", message="Downloading paper PDF")
-        pdf = await self._download_pdf(paper_id)
-        self.jobs.update_meta(meta, status="running", stage="upload_pdf", message="Uploading paper PDF to S3")
-        await self.storage.upload_bytes_with_retry_async(keys["source_pdf"], pdf, "application/pdf")
-        await self._run_init_style_json(paper_id, keys, return_on_ocr_ready=True, meta=meta)
-        self.jobs.update_meta(meta, status="running", stage="blog_generate", message="Generating blog markdown")
-        if not await self._wait_for_key(keys["full_text"], timeout_sec=30):
-            full_text = await self._read_ocr_markdown(keys)
-        else:
-            full_text = await self.storage.read_text_async(keys["full_text"])
-        if not full_text.strip():
-            raise RuntimeError("OCR markdown is empty")
+        try:
+            await self.jobs.update_meta_async(meta, status="running", stage="download", message="Downloading paper PDF")
+            pdf = await self._download_pdf(paper_id)
+            await self.jobs.update_meta_async(meta, status="running", stage="upload_pdf", message="Uploading paper PDF to S3")
+            await self.storage.upload_bytes_with_retry_async(keys["source_pdf"], pdf, "application/pdf")
+            await self._run_init_style_json(paper_id, keys, return_on_ocr_ready=True, meta=meta)
+            await self.jobs.update_meta_async(meta, status="running", stage="blog_generate", message="Generating blog markdown")
+            if not await self._wait_for_key(keys["full_text"], timeout_sec=30):
+                full_text = await self._read_ocr_markdown(keys)
+            else:
+                full_text = await self.storage.read_text_async(keys["full_text"])
+            if not full_text.strip():
+                raise RuntimeError("OCR markdown is empty")
 
-        markdown, model = await self._generate_markdown(full_text)
-        await self.storage.write_text_async(keys["blog_markdown"], markdown, "text/markdown; charset=utf-8")
-        meta_payload = {
-            "arxiv_id": paper_id,
-            "model": model,
-            "generated_at": datetime.now(timezone.utc).isoformat(),
-            "status": "ready",
-        }
-        await self.storage.write_json_async(keys["blog_meta"], meta_payload)
-        return {
-            "paper_id": paper_id,
-            "markdown": markdown,
-            "generated_at": meta_payload["generated_at"],
-            "markdown_s3_key": keys["blog_markdown"],
-            "meta_s3_key": keys["blog_meta"],
-        }
+            markdown, model = await self._generate_markdown(full_text)
+            await self.storage.write_text_async(keys["blog_markdown"], markdown, "text/markdown; charset=utf-8")
+            meta_payload = {
+                "arxiv_id": paper_id,
+                "model": model,
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "status": "ready",
+            }
+            await self.storage.write_json_async(keys["blog_meta"], meta_payload)
+            return {
+                "paper_id": paper_id,
+                "markdown": markdown,
+                "generated_at": meta_payload["generated_at"],
+                "markdown_s3_key": keys["blog_markdown"],
+                "meta_s3_key": keys["blog_meta"],
+            }
+        finally:
+            current_job_id = self._running_tasks.get(paper_id)
+            if current_job_id == meta.job_id:
+                self._running_tasks.pop(paper_id, None)
 
     async def create_job(self, payload: CreateBlogJobRequest) -> JobCreatedResponse:
         paper_id = self.normalize_paper_id(payload.paper_id)
         cached = await self.try_get_cached_result(paper_id)
         if cached and not payload.force:
             meta = self.jobs.create_meta("blog", paper_id, status="succeeded", progress=100, stage="complete", message="Reused cached blog result", result=cached)
-            self.jobs.save_meta(meta)
+            await self.jobs.save_meta_async(meta)
             return JobCreatedResponse(job_id=meta.job_id, job_type=meta.job_type, status=meta.status, progress=meta.progress, stage=meta.stage, message=meta.message, upstream_progress=meta.upstream_progress)
 
+        running_job_id = self._running_tasks.get(paper_id)
+        if running_job_id:
+            running_meta = await self.jobs.load_meta_async("blog", running_job_id)
+            if running_meta.status in {"queued", "running"}:
+                return JobCreatedResponse(
+                    job_id=running_meta.job_id,
+                    job_type=running_meta.job_type,
+                    status=running_meta.status,
+                    progress=running_meta.progress,
+                    stage=running_meta.stage,
+                    message=running_meta.message,
+                    upstream_progress=running_meta.upstream_progress,
+                )
+            self._running_tasks.pop(paper_id, None)
+
         meta = self.jobs.create_meta("blog", paper_id)
+        self._running_tasks[paper_id] = meta.job_id
+        try:
+            await self.jobs.save_meta_async(meta)
+        except Exception:
+            current_job_id = self._running_tasks.get(paper_id)
+            if current_job_id == meta.job_id:
+                self._running_tasks.pop(paper_id, None)
+            raise
         return self.jobs.spawn(meta, lambda job_meta: self._run_job(job_meta, force=payload.force))
 
     async def get_job(self, job_id: str) -> JobDetailResponse:
-        meta = self.jobs.load_meta("blog", job_id)
+        meta = await self.jobs.load_meta_async("blog", job_id)
         return self.jobs.to_detail(meta)
 
     async def get_result(self, job_id: str) -> BlogResultResponse:
-        meta = self.jobs.load_meta("blog", job_id)
+        meta = await self.jobs.load_meta_async("blog", job_id)
         if meta.status != "succeeded" or not meta.result:
             raise HTTPException(status_code=409, detail="Blog result is not ready")
         markdown_s3_key = meta.result.get("markdown_s3_key")
