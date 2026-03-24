@@ -4,14 +4,16 @@ import json
 import asyncio
 import re
 from datetime import datetime, timezone
+from io import BytesIO
 from typing import Optional
 
 import httpx
 from fastapi import HTTPException
+from PIL import Image
 
 from app.core.config import Settings
 from app.schemas.jobs import CreatePptJobRequest, JobCreatedResponse, JobDetailResponse, JobMeta
-from app.schemas.ppt import PptResultResponse, SlideItem
+from app.schemas.ppt import PptResultResponse
 from app.services.blog import BlogService
 from app.services.jobs import JobService
 from app.storage.s3 import S3Storage
@@ -35,6 +37,9 @@ class PptService:
 
     def _slide_key(self, paper_id: str, index: int) -> str:
         return f"{self._slides_prefix(paper_id)}/slide_{index}.png"
+
+    def _pdf_key(self, paper_id: str) -> str:
+        return f"{self._slides_prefix(paper_id)}/slides.pdf"
 
     def _normalize_language(self, language: Optional[str]) -> str:
         raw = (language or self.settings.slides_default_lang).strip().lower()
@@ -73,7 +78,9 @@ class PptService:
         if len(slides) < expected_count:
             return None
         style_content_s3_key = self._style_content_key(paper_id)
+        pdf_s3_key = self._pdf_key(paper_id)
         has_style_content = await self.storage.exists_async(style_content_s3_key)
+        has_pdf = await self.storage.exists_async(pdf_s3_key)
         generated_at = None
         if has_style_content:
             generated_at = datetime.now(timezone.utc).isoformat()
@@ -83,7 +90,32 @@ class PptService:
             "slides_prefix": self._slides_prefix(paper_id),
             "slides": slides,
             "style_content_s3_key": style_content_s3_key if has_style_content else None,
+            "pdf_s3_key": pdf_s3_key if has_pdf else None,
         }
+
+    async def _build_pdf_bytes(self, slides: list[dict]) -> bytes:
+        images: list[Image.Image] = []
+        try:
+            for slide in slides:
+                slide_bytes = await self.storage.read_bytes_async(slide["s3_key"])
+                with Image.open(BytesIO(slide_bytes)) as opened:
+                    images.append(opened.convert("RGB"))
+            if not images:
+                raise RuntimeError("No slide images available to build PDF")
+            buffer = BytesIO()
+            images[0].save(buffer, format="PDF", save_all=True, append_images=images[1:])
+            return buffer.getvalue()
+        finally:
+            for image in images:
+                image.close()
+
+    async def _ensure_pdf_artifact(self, paper_id: str, slides: list[dict]) -> str:
+        pdf_key = self._pdf_key(paper_id)
+        if await self.storage.exists_async(pdf_key):
+            return pdf_key
+        pdf_bytes = await self._build_pdf_bytes(slides)
+        await self.storage.upload_bytes_with_retry_async(pdf_key, pdf_bytes, "application/pdf")
+        return pdf_key
 
     async def _wait_for_slides(self, paper_id: str, expected_count: int, attempts: int = 15, interval_sec: int = 2) -> list[dict]:
         for _ in range(attempts):
@@ -216,6 +248,7 @@ class PptService:
             slides = await self._wait_for_slides(paper_id, expected_count)
             if len(slides) < expected_count:
                 raise RuntimeError(f"Slides output incomplete. Expected {expected_count}, got {len(slides)}")
+            pdf_s3_key = await self._ensure_pdf_artifact(paper_id, slides)
 
             return {
                 "paper_id": paper_id,
@@ -223,6 +256,7 @@ class PptService:
                 "slides_prefix": slides_prefix,
                 "slides": slides,
                 "style_content_s3_key": self._style_content_key(paper_id) if await self.storage.exists_async(self._style_content_key(paper_id)) else None,
+                "pdf_s3_key": pdf_s3_key,
             }
         finally:
             self._running_tasks.discard(paper_id)
@@ -248,10 +282,13 @@ class PptService:
         meta = await self.jobs.load_meta_async("ppt", job_id)
         if meta.status != "succeeded" or not meta.result:
             raise HTTPException(status_code=409, detail="PPT result is not ready")
+        slides = meta.result.get("slides") or []
+        if not slides:
+            raise HTTPException(status_code=500, detail="PPT result is missing slide outputs")
+        pdf_s3_key = meta.result.get("pdf_s3_key") or await self._ensure_pdf_artifact(meta.result["paper_id"], slides)
         return PptResultResponse(
             paper_id=meta.result["paper_id"],
             generated_at=datetime.fromisoformat(meta.result["generated_at"]) if meta.result.get("generated_at") else None,
-            slides_prefix=meta.result["slides_prefix"],
-            slides=[SlideItem(**item) for item in meta.result["slides"]],
-            style_content_s3_key=meta.result.get("style_content_s3_key"),
+            download_url=await self.storage.presign_get_url_async(pdf_s3_key, expires_in_seconds=1800),
+            expires_in_seconds=1800,
         )

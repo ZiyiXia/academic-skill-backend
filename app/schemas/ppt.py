@@ -12,6 +12,5 @@ class SlideItem(BaseModel):
 class PptResultResponse(BaseModel):
     paper_id: str
     generated_at: Optional[datetime] = None
-    slides_prefix: str
-    slides: list[SlideItem]
-    style_content_s3_key: Optional[str] = None
+    download_url: str
+    expires_in_seconds: int = 1800

@@ -51,6 +51,10 @@ class S3Storage:
         obj = self.client.get_object(Bucket=self.bucket, Key=key)
         return obj["Body"].read().decode("utf-8")
 
+    def read_bytes(self, key: str) -> bytes:
+        obj = self.client.get_object(Bucket=self.bucket, Key=key)
+        return obj["Body"].read()
+
     def write_text(self, key: str, content: str, content_type: str = "text/plain; charset=utf-8") -> None:
         self.client.put_object(Bucket=self.bucket, Key=key, Body=content.encode("utf-8"), ContentType=content_type)
 
@@ -90,6 +94,9 @@ class S3Storage:
 
     async def read_text_async(self, key: str) -> str:
         return await asyncio.to_thread(self.read_text, key)
+
+    async def read_bytes_async(self, key: str) -> bytes:
+        return await asyncio.to_thread(self.read_bytes, key)
 
     async def write_text_async(self, key: str, content: str, content_type: str = "text/plain; charset=utf-8") -> None:
         await asyncio.to_thread(self.write_text, key, content, content_type)

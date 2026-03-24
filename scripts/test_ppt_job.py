@@ -9,37 +9,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-import boto3
 import httpx
 
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-
-from app.core.config import get_settings
-
-
-def build_s3_client():
-    settings = get_settings()
-    kwargs: dict[str, Any] = {"service_name": "s3", "region_name": settings.s3_region}
-    if settings.s3_endpoint:
-        kwargs["endpoint_url"] = settings.s3_endpoint
-    if settings.s3_access_key and settings.s3_secret_key:
-        kwargs["aws_access_key_id"] = settings.s3_access_key
-        kwargs["aws_secret_access_key"] = settings.s3_secret_key
-    return boto3.client(**kwargs), settings.s3_bucket
-
-
-def download_s3_bytes(key: str) -> bytes:
-    client, bucket = build_s3_client()
-    obj = client.get_object(Bucket=bucket, Key=key)
-    return obj["Body"].read()
-
-
-def download_s3_text(key: str) -> str:
-    return download_s3_bytes(key).decode("utf-8")
-
 
 def poll_job(base_url: str, job_id: str, interval_sec: int, timeout_sec: int) -> dict[str, Any]:
     started = time.time()
@@ -72,28 +47,19 @@ def save_outputs(result_payload: dict[str, Any], output_root: Path) -> dict[str,
     output_dir = output_root / f"{timestamp}_{paper_id}"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    slide_files: list[str] = []
-    for slide in result_payload.get("slides", []):
-        index = int(slide["index"])
-        s3_key = slide["s3_key"]
-        suffix = Path(s3_key).suffix or ".png"
-        local_path = output_dir / f"slide_{index}{suffix}"
-        local_path.write_bytes(download_s3_bytes(s3_key))
-        slide_files.append(str(local_path))
-
-    style_path = None
-    style_key = result_payload.get("style_content_s3_key")
-    if style_key:
-        style_path = output_dir / "style_content_filled.json"
-        style_path.write_text(download_s3_text(style_key), encoding="utf-8")
+    with httpx.Client(timeout=300.0) as client:
+        response = client.get(result_payload["download_url"])
+        response.raise_for_status()
+        pdf_bytes = response.content
+    pdf_path = output_dir / "slides.pdf"
+    pdf_path.write_bytes(pdf_bytes)
 
     result_path = output_dir / "result.json"
     result_path.write_text(json.dumps(result_payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
     return {
         "output_dir": str(output_dir),
-        "slides": slide_files,
-        "style_content": str(style_path) if style_path else "",
+        "pdf": str(pdf_path),
         "result_json": str(result_path),
     }
 

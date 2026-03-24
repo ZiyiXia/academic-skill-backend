@@ -185,6 +185,35 @@ curl -X POST http://127.0.0.1:8010/v1/ppt/jobs \
   -d '{"paper_id":"1706.03762","slide_count":5,"language":"en","force":false}'
 ```
 
+轮询：
+
+```bash
+curl http://127.0.0.1:8010/v1/ppt/jobs/<job_id>
+```
+
+最终结果：
+
+```bash
+curl http://127.0.0.1:8010/v1/ppt/jobs/<job_id>/result
+```
+
+返回示例：
+
+```json
+{
+  "paper_id": "1706.03762",
+  "generated_at": "2026-03-24T12:00:00Z",
+  "download_url": "https://...",
+  "expires_in_seconds": 1800
+}
+```
+
+说明：
+
+- `download_url` 是按顺序拼好的 `slides.pdf` 临时下载链接
+- 默认有效期 `30` 分钟
+- 如果 S3 中已有 slide 图片但还没有 PDF，`/result` 会自动补建 PDF 再返回链接
+
 ## 本地测试脚本
 
 - Research：`python scripts/test_research.py`
@@ -193,6 +222,7 @@ curl -X POST http://127.0.0.1:8010/v1/ppt/jobs \
 - Blog job：`python scripts/test_blog_job.py --paper-id 2603.10165 --force`
 - Blog job 成功后会通过 `/result` 返回的临时下载链接拉取 `blog.md` 到本地
 - PPT job：`python scripts/test_ppt_job.py --paper-id 2603.10165 --slide-count 5 --force`
+- PPT job 成功后会通过 `/result` 返回的临时下载链接拉取 `slides.pdf` 到本地
 - S3 大对象探测：`python scripts/test_s3_large_upload.py --size-mb 20`
 
 输出目录：

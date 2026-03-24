@@ -78,7 +78,7 @@ Final result key fields when generation done:
 
 `POST /v1/ppt/jobs`
 
-Create an async job that generates paper presentation slides and returns slide asset keys.
+Create an async job that generates paper presentation slides. When done, the backend stitches all slide images into a PDF and returns a temporary download link.
 
 - Required: `paper_id`
 - Optional: `force` (default `false`), `slide_count` (1..30), `language`
@@ -87,9 +87,9 @@ Create an async job that generates paper presentation slides and returns slide a
 
 Final result key fields:
 
-- `slides` (`index`, `s3_key`)
-- `slides_prefix`
-- `style_content_s3_key`
+- `download_url`
+- `expires_in_seconds`
+- `paper_id`
 
 ## Async Job Contract (Blog/PPT)
 
@@ -137,6 +137,12 @@ For blog:
 
 - use `GET /v1/blog/jobs/{job_id}/result`
 - return the temporary `download_url` directly as the primary deliverable (link-first interaction)
+- note that the link expires in `1800` seconds by default
+
+For ppt:
+
+- use `GET /v1/ppt/jobs/{job_id}/result`
+- return the temporary PDF `download_url` directly as the primary deliverable
 - note that the link expires in `1800` seconds by default
 
 ### Topic -> Backend Research

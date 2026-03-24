@@ -22,6 +22,9 @@ class FakeStorage:
     def read_text(self, key: str) -> str:
         return self.objects[key].decode("utf-8")
 
+    def read_bytes(self, key: str) -> bytes:
+        return self.objects[key]
+
     def write_text(self, key: str, content: str, content_type: str = "text/plain; charset=utf-8") -> None:
         self.objects[key] = content.encode("utf-8")
 
@@ -44,6 +47,9 @@ class FakeStorage:
 
     async def read_text_async(self, key: str) -> str:
         return self.read_text(key)
+
+    async def read_bytes_async(self, key: str) -> bytes:
+        return self.read_bytes(key)
 
     async def write_text_async(self, key: str, content: str, content_type: str = "text/plain; charset=utf-8") -> None:
         self.write_text(key, content, content_type)
@@ -289,6 +295,43 @@ async def test_ppt_cached_result_short_circuits_generation():
     assert created.status == "succeeded"
     detail = await service.get_job(created.job_id)
     assert len(detail.result["slides"]) == settings.slides_default_count
+
+
+@pytest.mark.asyncio
+async def test_ppt_result_returns_presigned_download_url():
+    settings = build_settings()
+    storage = FakeStorage()
+    jobs = JobService(storage, settings)
+    service = PptService(settings, storage, jobs)
+    paper_id = "1234.5678"
+    generated_at = datetime.now(timezone.utc).isoformat()
+    slide_key = service._slide_key(paper_id, 1)
+    storage.upload_bytes(slide_key, b"fake-png", "image/png")
+    meta = jobs.create_meta(
+        "ppt",
+        paper_id,
+        status="succeeded",
+        progress=100,
+        stage="complete",
+        result={
+            "paper_id": paper_id,
+            "generated_at": generated_at,
+            "slides": [{"index": 1, "s3_key": slide_key}],
+        },
+    )
+    jobs.save_meta(meta)
+
+    async def fake_ensure_pdf_artifact(paper_id_arg: str, slides: list[dict]) -> str:
+        assert paper_id_arg == paper_id
+        assert slides[0]["s3_key"] == slide_key
+        return service._pdf_key(paper_id_arg)
+
+    service._ensure_pdf_artifact = fake_ensure_pdf_artifact  # type: ignore[method-assign]
+
+    result = await service.get_result(meta.job_id)
+    assert result.paper_id == paper_id
+    assert result.expires_in_seconds == 1800
+    assert result.download_url.endswith(f"{service._pdf_key(paper_id)}?expires=1800")
 
 
 @pytest.mark.asyncio
