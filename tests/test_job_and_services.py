@@ -212,12 +212,16 @@ async def test_blog_cached_result_short_circuits_generation():
 
 
 @pytest.mark.asyncio
-async def test_blog_result_returns_presigned_download_url():
+async def test_blog_result_returns_presigned_inline_markdown_url():
     settings = build_settings()
     storage = FakeStorage()
     jobs = JobService(storage, settings)
     service = BlogService(settings, storage, jobs)
+    keys = service.keys_for("1234.5678")
     generated_at = datetime.now(timezone.utc).isoformat()
+    raw_markdown = "# Blog\n\n![Figure](imgs/figure.png)\n"
+    storage.write_text(keys["blog_markdown"], raw_markdown)
+    storage.upload_bytes(f"{keys['ocr_prefix']}/imgs/figure.png", b"fake-png", "image/png")
     meta = jobs.create_meta(
         "blog",
         "1234.5678",
@@ -227,7 +231,9 @@ async def test_blog_result_returns_presigned_download_url():
         result={
             "paper_id": "1234.5678",
             "generated_at": generated_at,
-            "markdown_s3_key": "deepxiv/blogs/1234.5678/blog/blog.md",
+            "markdown": raw_markdown,
+            "markdown_s3_key": keys["blog_markdown"],
+            "meta_s3_key": keys["blog_meta"],
         },
     )
     jobs.save_meta(meta)
@@ -235,7 +241,11 @@ async def test_blog_result_returns_presigned_download_url():
     result = await service.get_result(meta.job_id)
     assert result.paper_id == "1234.5678"
     assert result.expires_in_seconds == 1800
-    assert result.download_url.endswith("deepxiv/blogs/1234.5678/blog/blog.md?expires=1800")
+    assert result.download_url.endswith(f"{keys['blog_inline_markdown']}?expires=1800")
+    assert storage.exists(keys["blog_inline_markdown"])
+    inline_markdown = storage.read_text(keys["blog_inline_markdown"])
+    assert "data:image/png;base64,ZmFrZS1wbmc=" in inline_markdown
+    assert "![Figure](imgs/figure.png)" not in inline_markdown
 
 
 @pytest.mark.asyncio

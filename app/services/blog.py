@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import contextlib
 import json
+import mimetypes
 import re
 from datetime import datetime, timezone
 from typing import Optional
@@ -47,6 +49,7 @@ class BlogService:
             "content_json": f"{base}/gen/content.json",
             "style_json": f"{base}/gen/style_content.json",
             "blog_markdown": f"{base}/blog/blog.md",
+            "blog_inline_markdown": f"{base}/blog/blog_inline.md",
             "blog_meta": f"{base}/blog/blog_meta.json",
         }
 
@@ -57,8 +60,59 @@ class BlogService:
             if ref and "imgs/" in ref and not ref.startswith(("http://", "https://", "data:")):
                 refs.add(ref)
         for match in RAW_IMAGE_REGEX.finditer(markdown):
-            refs.add(match.group(0).strip())
+                refs.add(match.group(0).strip())
         return sorted(refs)
+
+    def _guess_content_type(self, path: str) -> str:
+        guessed, _ = mimetypes.guess_type(path)
+        return guessed or "application/octet-stream"
+
+    async def _inline_markdown_images(self, markdown: str, keys: dict[str, str]) -> str:
+        replacements: dict[str, str] = {}
+
+        for match in IMAGE_REGEX.finditer(markdown):
+            raw_ref = (match.group(1) or "").strip()
+            if not raw_ref or raw_ref.startswith(("http://", "https://", "data:")):
+                continue
+            normalized = raw_ref.replace("./", "").lstrip("/")
+            if not normalized or ".." in normalized:
+                continue
+            if raw_ref in replacements:
+                continue
+
+            image_key = normalized if normalized.startswith(f"{keys['ocr_prefix']}/") else f"{keys['ocr_prefix']}/{normalized}"
+            if not await self.storage.exists_async(image_key):
+                continue
+
+            image_bytes = await self.storage.read_bytes_async(image_key)
+            content_type = self._guess_content_type(normalized)
+            encoded = base64.b64encode(image_bytes).decode("ascii")
+            replacements[raw_ref] = f"data:{content_type};base64,{encoded}"
+
+        if not replacements:
+            return markdown
+
+        def replace_match(match: re.Match[str]) -> str:
+            alt = match.group(0).split("](", 1)[0][2:]
+            raw_ref = (match.group(1) or "").strip()
+            inlined = replacements.get(raw_ref)
+            if not inlined:
+                return match.group(0)
+            return f"![{alt}]({inlined})"
+
+        return IMAGE_REGEX.sub(replace_match, markdown)
+
+    async def _ensure_inline_markdown(self, paper_id: str, *, markdown_raw: Optional[str] = None) -> tuple[str, str]:
+        keys = self.keys_for(paper_id)
+        inline_key = keys["blog_inline_markdown"]
+        if await self.storage.exists_async(inline_key):
+            return await self.storage.read_text_async(inline_key), inline_key
+
+        if not isinstance(markdown_raw, str) or not markdown_raw.strip():
+            markdown_raw = await self.storage.read_text_async(keys["blog_markdown"])
+        inline_markdown = await self._inline_markdown_images(markdown_raw, keys)
+        await self.storage.write_text_async(inline_key, inline_markdown, "text/markdown; charset=utf-8")
+        return inline_markdown, inline_key
 
     async def _wait_for_key(self, key: str, timeout_sec: int = 180, poll_sec: int = 6) -> bool:
         for _ in range(max(1, timeout_sec // poll_sec)):
@@ -411,9 +465,12 @@ class BlogService:
         markdown_s3_key = meta.result.get("markdown_s3_key")
         if not markdown_s3_key:
             raise HTTPException(status_code=500, detail="Blog result is missing markdown storage key")
+        paper_id = meta.result["paper_id"]
+        markdown_raw = meta.result.get("markdown")
+        _, inline_key = await self._ensure_inline_markdown(paper_id, markdown_raw=markdown_raw if isinstance(markdown_raw, str) else None)
         return BlogResultResponse(
-            paper_id=meta.result["paper_id"],
+            paper_id=paper_id,
             generated_at=datetime.fromisoformat(meta.result["generated_at"]) if meta.result.get("generated_at") else None,
-            download_url=await self.storage.presign_get_url_async(markdown_s3_key, expires_in_seconds=1800),
+            download_url=await self.storage.presign_get_url_async(inline_key, expires_in_seconds=1800),
             expires_in_seconds=1800,
         )
