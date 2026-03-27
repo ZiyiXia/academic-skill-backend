@@ -132,6 +132,27 @@ class S3Storage:
     async def list_keys_async(self, prefix: str) -> list[str]:
         return await asyncio.to_thread(self.list_keys, prefix)
 
+    def delete_keys(self, keys: list[str]) -> None:
+        if not keys:
+            return
+        for start in range(0, len(keys), 1000):
+            batch = keys[start:start + 1000]
+            self.client.delete_objects(
+                Bucket=self.bucket,
+                Delete={"Objects": [{"Key": key} for key in batch], "Quiet": True},
+            )
+
+    async def delete_keys_async(self, keys: list[str]) -> None:
+        await asyncio.to_thread(self.delete_keys, keys)
+
+    def delete_prefix(self, prefix: str) -> int:
+        keys = self.list_keys(prefix)
+        self.delete_keys(keys)
+        return len(keys)
+
+    async def delete_prefix_async(self, prefix: str) -> int:
+        return await asyncio.to_thread(self.delete_prefix, prefix)
+
     def presign_get_url(self, key: str, expires_in_seconds: int = 1800) -> str:
         return self.client.generate_presigned_url(
             "get_object",

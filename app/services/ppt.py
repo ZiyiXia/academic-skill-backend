@@ -136,16 +136,18 @@ class PptService:
         self._running_tasks.add(paper_id)
 
         try:
-            keys = self.blogs.keys_for(paper_id)
+            final_keys = self.blogs.keys_for(paper_id)
+            work_keys = self.blogs.temp_keys_for("ppt", paper_id, meta.job_id)
+            await self.jobs.update_meta_async(meta, temp_prefix=work_keys["base"])
             await self.jobs.update_meta_async(meta, status="running", stage="prerequisite", message="Checking PPT prerequisites")
 
-            style_json_exists = await self.storage.exists_async(keys["style_json"])
-            content_json_exists = await self.storage.exists_async(keys["content_json"])
+            style_json_exists = await self.storage.exists_async(work_keys["style_json"])
+            content_json_exists = await self.storage.exists_async(work_keys["content_json"])
             should_regenerate_prerequisites = not style_json_exists
             style_content_json = ""
 
             if style_json_exists:
-                style_content_json = await self.storage.read_text_async(keys["style_json"])
+                style_content_json = await self.storage.read_text_async(work_keys["style_json"])
                 existing_style_slides = self._get_style_slide_count(style_content_json)
                 if existing_style_slides > 0 and existing_style_slides < expected_count:
                     should_regenerate_prerequisites = True
@@ -172,10 +174,17 @@ class PptService:
                     stage="prerequisite",
                     message="Running initStyleJson flow for PPT prerequisites",
                 )
-                await self.blogs.ensure_prerequisites(paper_id, force_init=True, meta=meta)
-                if not await self.storage.exists_async(keys["style_json"]):
+                await self.jobs.update_meta_async(
+                    meta,
+                    status="running",
+                    stage="upload_pdf",
+                    message="Uploading paper PDF to isolated PPT work path",
+                )
+                await self.blogs.ensure_source_pdf(paper_id, work_keys["source_pdf"])
+                await self.blogs.ensure_prerequisites(paper_id, job_id=meta.job_id, job_type="ppt", force_init=True, meta=meta)
+                if not await self.storage.exists_async(work_keys["style_json"]):
                     raise RuntimeError("Missing usable style_content.json after prerequisite generation")
-                style_content_json = await self.storage.read_text_async(keys["style_json"])
+                style_content_json = await self.storage.read_text_async(work_keys["style_json"])
 
             if not style_content_json.strip():
                 raise RuntimeError("style_content.json is empty")

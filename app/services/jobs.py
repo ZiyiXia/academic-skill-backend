@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from uuid import uuid4
 
@@ -32,6 +32,8 @@ class JobService:
         upstream_progress: Optional[float] = None,
         result: Optional[dict] = None,
         error_message: Optional[str] = None,
+        temp_prefix: Optional[str] = None,
+        cleanup_after: Optional[datetime] = None,
     ) -> JobMeta:
         now = datetime.now(timezone.utc)
         return JobMeta(
@@ -45,6 +47,8 @@ class JobService:
             upstream_progress=upstream_progress,
             result=result,
             error_message=error_message,
+            temp_prefix=temp_prefix,
+            cleanup_after=cleanup_after,
             created_at=now,
             updated_at=now,
         )
@@ -84,6 +88,8 @@ class JobService:
         upstream_progress: Optional[float] = None,
         result: Optional[dict] = None,
         error_message: Optional[str] = None,
+        temp_prefix: Optional[str] = None,
+        cleanup_after: Optional[datetime] = None,
     ) -> JobMeta:
         try:
             current = self.load_meta(meta.job_type, meta.job_id)
@@ -98,6 +104,8 @@ class JobService:
                 "upstream_progress": current.upstream_progress if upstream_progress is None else upstream_progress,
                 "result": current.result if result is None else result,
                 "error_message": current.error_message if error_message is None else error_message,
+                "temp_prefix": current.temp_prefix if temp_prefix is None else temp_prefix,
+                "cleanup_after": current.cleanup_after if cleanup_after is None else cleanup_after,
                 "updated_at": datetime.now(timezone.utc),
             }
         )
@@ -115,6 +123,8 @@ class JobService:
         upstream_progress: Optional[float] = None,
         result: Optional[dict] = None,
         error_message: Optional[str] = None,
+        temp_prefix: Optional[str] = None,
+        cleanup_after: Optional[datetime] = None,
     ) -> JobMeta:
         try:
             current = await self.load_meta_async(meta.job_type, meta.job_id)
@@ -129,11 +139,19 @@ class JobService:
                 "upstream_progress": current.upstream_progress if upstream_progress is None else upstream_progress,
                 "result": current.result if result is None else result,
                 "error_message": current.error_message if error_message is None else error_message,
+                "temp_prefix": current.temp_prefix if temp_prefix is None else temp_prefix,
+                "cleanup_after": current.cleanup_after if cleanup_after is None else cleanup_after,
                 "updated_at": datetime.now(timezone.utc),
             }
         )
         await self.save_meta_async(updated)
         return updated
+
+    def compute_cleanup_after(self, status: JobStatus) -> datetime:
+        now = datetime.now(timezone.utc)
+        if status == "failed":
+            return now + timedelta(hours=72)
+        return now + timedelta(hours=24)
 
     def spawn(
         self,
@@ -144,10 +162,26 @@ class JobService:
             current = await self.update_meta_async(meta, status="running", progress=5, stage="init", message="Job started", error_message=None)
             try:
                 result = await worker(current)
-                await self.update_meta_async(current, status="succeeded", progress=100, stage="complete", message="Job completed", result=result, error_message=None)
+                await self.update_meta_async(
+                    current,
+                    status="succeeded",
+                    progress=100,
+                    stage="complete",
+                    message="Job completed",
+                    result=result,
+                    error_message=None,
+                    cleanup_after=self.compute_cleanup_after("succeeded"),
+                )
             except Exception as exc:
                 error_text = str(exc).strip() or f"{type(exc).__name__}: {repr(exc)}"
-                await self.update_meta_async(current, status="failed", progress=current.progress, message=error_text, error_message=error_text)
+                await self.update_meta_async(
+                    current,
+                    status="failed",
+                    progress=current.progress,
+                    message=error_text,
+                    error_message=error_text,
+                    cleanup_after=self.compute_cleanup_after("failed"),
+                )
 
         asyncio.create_task(runner())
         return JobCreatedResponse(

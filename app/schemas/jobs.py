@@ -19,6 +19,8 @@ class JobMeta(BaseModel):
     upstream_progress: Optional[float] = None
     error_message: Optional[str] = None
     result: Optional[dict[str, Any]] = None
+    temp_prefix: Optional[str] = None
+    cleanup_after: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
 
@@ -44,6 +46,8 @@ class JobDetailResponse(BaseModel):
     upstream_progress: Optional[float] = None
     error_message: Optional[str] = None
     result: Optional[dict[str, Any]] = None
+    temp_prefix: Optional[str] = None
+    cleanup_after: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
 

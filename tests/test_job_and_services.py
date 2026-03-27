@@ -88,6 +88,7 @@ def build_settings() -> Settings:
         blog_s3_prefix="deepxiv/blogs",
         slides_s3_subdir="slides",
         skill_job_prefix="academic-skill/jobs",
+        skill_run_prefix="academic-skill/runs",
         blog_image_gen_url="http://example.com/image-gen",
         blog_llm_base_url="https://api.example.com/v1",
         blog_llm_api_key="key",

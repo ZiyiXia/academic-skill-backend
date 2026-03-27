@@ -88,10 +88,20 @@ Final result fields:
 
 Do not treat the create response as the final artifact.
 
-1. `POST /jobs` to create
+For blog:
+
+1. `POST /v1/blog/jobs`
 2. Read `job_id`
-3. Poll `GET /jobs/{job_id}`
-4. If `status == succeeded`, fetch `GET /jobs/{job_id}/result`
+3. Poll `GET /v1/blog/jobs/{job_id}`
+4. If `status == succeeded`, fetch `GET /v1/blog/jobs/{job_id}/result`
+5. If `status == failed`, surface `error_message`
+
+For ppt:
+
+1. `POST /v1/ppt/jobs`
+2. Read `job_id`
+3. Poll `GET /v1/ppt/jobs/{job_id}`
+4. If `status == succeeded`, fetch `GET /v1/ppt/jobs/{job_id}/result`
 5. If `status == failed`, surface `error_message`
 
 Statuses: `queued | running | succeeded | failed`

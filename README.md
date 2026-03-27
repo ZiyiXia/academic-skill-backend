@@ -461,6 +461,7 @@ curl -X POST http://127.0.0.1:8010/v1/ppt/jobs \
 - Blog job 成功后会通过 `/result` 返回 `blog_inline.md` 的临时下载链接
 - PPT job：`python scripts/test_ppt_job.py --paper-id 2603.10165 --slide-count 5 --force`
 - PPT job 成功后会通过 `/result` 返回的临时下载链接拉取 `slides.pdf` 到本地
+- 清理过期 job 临时产物：`python scripts/cleanup_job_artifacts.py`
 - S3 大对象探测：`python scripts/test_s3_large_upload.py --size-mb 20`
 
 输出目录：
@@ -468,3 +469,17 @@ curl -X POST http://127.0.0.1:8010/v1/ppt/jobs \
 - `outputs/research_tests/`
 - `outputs/blog_tests/`
 - `outputs/ppt_tests/`
+
+## 临时产物清理
+
+- blog / ppt 的输入与中间产物按 `job_id` 隔离，默认前缀是 `academic-skill/runs`
+- 成功任务临时产物保留 `24h`
+- 失败任务临时产物保留 `72h`
+- 定期运行 `python scripts/cleanup_job_artifacts.py` 扫描并删除过期前缀
+- 用 `--dry-run` 可以先预览待删除项
+
+示例 cron（每天凌晨 3 点执行一次）：
+
+```cron
+0 3 * * * cd /Users/baai/Desktop/Projects/demo_serve/academic-skill-backend && /opt/miniconda3/bin/python scripts/cleanup_job_artifacts.py >> logs/cleanup.log 2>&1
+```

@@ -53,6 +53,21 @@ class BlogService:
             "blog_meta": f"{base}/blog/blog_meta.json",
         }
 
+    def temp_prefix_for(self, job_type: str, paper_id: str, job_id: str) -> str:
+        normalized = self.normalize_paper_id(paper_id)
+        return f"{self.settings.skill_run_prefix.rstrip('/')}/{job_type}/{job_id}/{normalized}"
+
+    def temp_keys_for(self, job_type: str, paper_id: str, job_id: str) -> dict[str, str]:
+        base = self.temp_prefix_for(job_type, paper_id, job_id)
+        return {
+            "base": base,
+            "source_pdf": f"{base}/source/paper.pdf",
+            "ocr_prefix": f"{base}/ocr",
+            "full_text": f"{base}/ocr/full_text.md",
+            "content_json": f"{base}/gen/content.json",
+            "style_json": f"{base}/gen/style_content.json",
+        }
+
     def _extract_image_refs(self, markdown: str) -> list[str]:
         refs = set()
         for match in IMAGE_REGEX.finditer(markdown):
@@ -167,6 +182,13 @@ class BlogService:
                 raise RuntimeError(f"Expected PDF from arXiv, got content-type={content_type or 'unknown'}")
             return response.content
 
+    async def ensure_source_pdf(self, paper_id: str, target_key: str) -> str:
+        if await self.storage.exists_async(target_key):
+            return target_key
+        pdf = await self._download_pdf(paper_id)
+        await self.storage.upload_bytes_with_retry_async(target_key, pdf, "application/pdf")
+        return target_key
+
     async def _run_init_style_json(self, paper_id: str, keys: dict[str, str], *, return_on_ocr_ready: bool, meta: Optional[JobMeta] = None) -> None:
         url = f"{self.settings.blog_image_gen_url.rstrip('/')}/api/v1/ppt/initStyleJson"
         payload = {
@@ -278,8 +300,8 @@ class BlogService:
     async def _prerequisite_artifacts_ready(self, keys: dict[str, str]) -> bool:
         return await self.storage.exists_async(keys["content_json"]) and await self.storage.exists_async(keys["style_json"])
 
-    async def ensure_outline_from_existing_ocr(self, paper_id: str, meta: Optional[JobMeta] = None) -> None:
-        keys = self.keys_for(paper_id)
+    async def ensure_outline_from_existing_ocr(self, paper_id: str, *, job_id: Optional[str] = None, job_type: str = "ppt", meta: Optional[JobMeta] = None) -> None:
+        keys = self.temp_keys_for(job_type, paper_id, job_id) if job_id else self.keys_for(paper_id)
         if await self._prerequisite_artifacts_ready(keys):
             return
         full_text = await self._read_ocr_markdown(keys)
@@ -310,8 +332,8 @@ class BlogService:
             meta=meta,
         )
 
-    async def ensure_prerequisites(self, paper_id: str, *, force_init: bool = False, meta: Optional[JobMeta] = None) -> None:
-        keys = self.keys_for(paper_id)
+    async def ensure_prerequisites(self, paper_id: str, *, job_id: Optional[str] = None, job_type: str = "ppt", force_init: bool = False, meta: Optional[JobMeta] = None) -> None:
+        keys = self.temp_keys_for(job_type, paper_id, job_id) if job_id else self.keys_for(paper_id)
         if not force_init and await self._wait_for_prerequisites(keys, timeout_sec=15):
             return
         await self._run_init_style_json(paper_id, keys, return_on_ocr_ready=False, meta=meta)
@@ -380,40 +402,42 @@ class BlogService:
 
     async def _run_job(self, meta: JobMeta, *, force: bool = False) -> dict:
         paper_id = self.normalize_paper_id(meta.paper_id)
-        keys = self.keys_for(paper_id)
+        final_keys = self.keys_for(paper_id)
+        work_keys = self.temp_keys_for("blog", paper_id, meta.job_id)
         cached = await self.try_get_cached_result(paper_id)
         if cached and not force:
             return cached
 
         try:
+            await self.jobs.update_meta_async(meta, temp_prefix=work_keys["base"])
             await self.jobs.update_meta_async(meta, status="running", stage="download", message="Downloading paper PDF")
             pdf = await self._download_pdf(paper_id)
             await self.jobs.update_meta_async(meta, status="running", stage="upload_pdf", message="Uploading paper PDF to S3")
-            await self.storage.upload_bytes_with_retry_async(keys["source_pdf"], pdf, "application/pdf")
-            await self._run_init_style_json(paper_id, keys, return_on_ocr_ready=True, meta=meta)
+            await self.storage.upload_bytes_with_retry_async(work_keys["source_pdf"], pdf, "application/pdf")
+            await self._run_init_style_json(paper_id, work_keys, return_on_ocr_ready=True, meta=meta)
             await self.jobs.update_meta_async(meta, status="running", stage="blog_generate", message="Generating blog markdown")
-            if not await self._wait_for_key(keys["full_text"], timeout_sec=30):
-                full_text = await self._read_ocr_markdown(keys)
+            if not await self._wait_for_key(work_keys["full_text"], timeout_sec=30):
+                full_text = await self._read_ocr_markdown(work_keys)
             else:
-                full_text = await self.storage.read_text_async(keys["full_text"])
+                full_text = await self.storage.read_text_async(work_keys["full_text"])
             if not full_text.strip():
                 raise RuntimeError("OCR markdown is empty")
 
             markdown, model = await self._generate_markdown(full_text)
-            await self.storage.write_text_async(keys["blog_markdown"], markdown, "text/markdown; charset=utf-8")
+            await self.storage.write_text_async(final_keys["blog_markdown"], markdown, "text/markdown; charset=utf-8")
             meta_payload = {
                 "arxiv_id": paper_id,
                 "model": model,
                 "generated_at": datetime.now(timezone.utc).isoformat(),
                 "status": "ready",
             }
-            await self.storage.write_json_async(keys["blog_meta"], meta_payload)
+            await self.storage.write_json_async(final_keys["blog_meta"], meta_payload)
             return {
                 "paper_id": paper_id,
                 "markdown": markdown,
                 "generated_at": meta_payload["generated_at"],
-                "markdown_s3_key": keys["blog_markdown"],
-                "meta_s3_key": keys["blog_meta"],
+                "markdown_s3_key": final_keys["blog_markdown"],
+                "meta_s3_key": final_keys["blog_meta"],
             }
         finally:
             current_job_id = self._running_tasks.get(paper_id)

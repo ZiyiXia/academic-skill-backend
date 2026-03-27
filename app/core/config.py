@@ -27,6 +27,7 @@ class Settings(BaseModel):
     blog_s3_prefix: str
     slides_s3_subdir: str
     skill_job_prefix: str
+    skill_run_prefix: str
 
     blog_image_gen_url: str
     blog_llm_base_url: str
@@ -72,6 +73,7 @@ def get_settings() -> Settings:
         blog_s3_prefix=_env("BLOG_S3_PREFIX", "deepxiv/blogs"),
         slides_s3_subdir=_env("SLIDES_S3_SUBDIR", "slides"),
         skill_job_prefix=_env("SKILL_JOB_PREFIX", "academic-skill/jobs"),
+        skill_run_prefix=_env("SKILL_RUN_PREFIX", "academic-skill/runs"),
         blog_image_gen_url=_env("BLOG_IMAGE_GEN_URL", "http://120.92.112.87:32500"),
         blog_llm_base_url=_env("BLOG_LLM_BASE_URL", "https://api.openai.com/v1"),
         blog_llm_api_key=_env_opt("BLOG_LLM_API_KEY"),
