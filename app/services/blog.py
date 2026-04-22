@@ -6,11 +6,13 @@ import contextlib
 import json
 import mimetypes
 import re
+from io import BytesIO
 from datetime import datetime, timezone
 from typing import Optional
 
 import httpx
 from fastapi import HTTPException
+from PIL import Image
 
 from app.core.config import Settings
 from app.schemas.blog import BlogResultResponse
@@ -78,9 +80,18 @@ class BlogService:
                 refs.add(match.group(0).strip())
         return sorted(refs)
 
-    def _guess_content_type(self, path: str) -> str:
+    def _guess_content_type(self, path: str, image_bytes: Optional[bytes] = None) -> str:
+        if image_bytes:
+            with contextlib.suppress(Exception):
+                with Image.open(BytesIO(image_bytes)) as image:
+                    detected = image.get_format_mimetype()
+                    if detected:
+                        return detected
         guessed, _ = mimetypes.guess_type(path)
         return guessed or "application/octet-stream"
+
+    def _markdown_has_uninlined_images(self, markdown: str) -> bool:
+        return bool(self._extract_image_refs(markdown))
 
     async def _inline_markdown_images(self, markdown: str, keys: dict[str, str]) -> str:
         replacements: dict[str, str] = {}
@@ -100,7 +111,7 @@ class BlogService:
                 continue
 
             image_bytes = await self.storage.read_bytes_async(image_key)
-            content_type = self._guess_content_type(normalized)
+            content_type = self._guess_content_type(normalized, image_bytes)
             encoded = base64.b64encode(image_bytes).decode("ascii")
             replacements[raw_ref] = f"data:{content_type};base64,{encoded}"
 
@@ -117,15 +128,25 @@ class BlogService:
 
         return IMAGE_REGEX.sub(replace_match, markdown)
 
-    async def _ensure_inline_markdown(self, paper_id: str, *, markdown_raw: Optional[str] = None) -> tuple[str, str]:
+    async def _ensure_inline_markdown(
+        self,
+        paper_id: str,
+        *,
+        markdown_raw: Optional[str] = None,
+        image_keys: Optional[dict[str, str]] = None,
+        refresh: bool = False,
+    ) -> tuple[str, str]:
         keys = self.keys_for(paper_id)
         inline_key = keys["blog_inline_markdown"]
         if await self.storage.exists_async(inline_key):
-            return await self.storage.read_text_async(inline_key), inline_key
+            existing = await self.storage.read_text_async(inline_key)
+            if not refresh and not self._markdown_has_uninlined_images(existing):
+                return existing, inline_key
 
         if not isinstance(markdown_raw, str) or not markdown_raw.strip():
             markdown_raw = await self.storage.read_text_async(keys["blog_markdown"])
-        inline_markdown = await self._inline_markdown_images(markdown_raw, keys)
+        source_keys = image_keys or keys
+        inline_markdown = await self._inline_markdown_images(markdown_raw, source_keys)
         await self.storage.write_text_async(inline_key, inline_markdown, "text/markdown; charset=utf-8")
         return inline_markdown, inline_key
 
@@ -425,6 +446,12 @@ class BlogService:
 
             markdown, model = await self._generate_markdown(full_text)
             await self.storage.write_text_async(final_keys["blog_markdown"], markdown, "text/markdown; charset=utf-8")
+            await self._ensure_inline_markdown(
+                paper_id,
+                markdown_raw=markdown,
+                image_keys=work_keys,
+                refresh=True,
+            )
             meta_payload = {
                 "arxiv_id": paper_id,
                 "model": model,
@@ -491,7 +518,12 @@ class BlogService:
             raise HTTPException(status_code=500, detail="Blog result is missing markdown storage key")
         paper_id = meta.result["paper_id"]
         markdown_raw = meta.result.get("markdown")
-        _, inline_key = await self._ensure_inline_markdown(paper_id, markdown_raw=markdown_raw if isinstance(markdown_raw, str) else None)
+        image_keys = self.temp_keys_for(meta.job_type, paper_id, meta.job_id) if meta.temp_prefix else None
+        _, inline_key = await self._ensure_inline_markdown(
+            paper_id,
+            markdown_raw=markdown_raw if isinstance(markdown_raw, str) else None,
+            image_keys=image_keys,
+        )
         return BlogResultResponse(
             paper_id=paper_id,
             generated_at=datetime.fromisoformat(meta.result["generated_at"]) if meta.result.get("generated_at") else None,
