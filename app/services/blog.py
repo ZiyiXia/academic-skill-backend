@@ -42,6 +42,21 @@ class BlogService:
 
     def keys_for(self, paper_id: str) -> dict[str, str]:
         normalized = self.normalize_paper_id(paper_id)
+        base = f"papers/{normalized}"
+        return {
+            "base": base,
+            "source_pdf": f"{base}/source/paper.pdf",
+            "ocr_prefix": f"{base}/ocr",
+            "full_text": f"{base}/ocr/full_text.md",
+            "content_json": f"{base}/gen/content.json",
+            "style_json": f"{base}/gen/style_content.json",
+            "blog_markdown": f"{base}/blog/blog.md",
+            "blog_inline_markdown": f"{base}/blog/blog_inline.md",
+            "blog_meta": f"{base}/blog/blog_meta.json",
+        }
+
+    def legacy_keys_for(self, paper_id: str) -> dict[str, str]:
+        normalized = self.normalize_paper_id(paper_id)
         base = f"{self.settings.blog_s3_prefix.rstrip('/')}/{normalized}"
         return {
             "base": base,
@@ -57,7 +72,7 @@ class BlogService:
 
     def temp_prefix_for(self, job_type: str, paper_id: str, job_id: str) -> str:
         normalized = self.normalize_paper_id(paper_id)
-        return f"{self.settings.skill_run_prefix.rstrip('/')}/{job_type}/{job_id}/{normalized}"
+        return f"jobs/{job_type}/{job_id}/scratch/{normalized}"
 
     def temp_keys_for(self, job_type: str, paper_id: str, job_id: str) -> dict[str, str]:
         base = self.temp_prefix_for(job_type, paper_id, job_id)
@@ -92,6 +107,25 @@ class BlogService:
 
     def _markdown_has_uninlined_images(self, markdown: str) -> bool:
         return bool(self._extract_image_refs(markdown))
+
+    async def _select_read_keys(self, paper_id: str) -> dict[str, str]:
+        keys = self.keys_for(paper_id)
+        if (
+            await self.storage.exists_async(keys["blog_markdown"])
+            or await self.storage.exists_async(keys["blog_inline_markdown"])
+            or await self.storage.exists_async(keys["style_json"])
+            or await self.storage.exists_async(keys["full_text"])
+        ):
+            return keys
+        legacy_keys = self.legacy_keys_for(paper_id)
+        if (
+            await self.storage.exists_async(legacy_keys["blog_markdown"])
+            or await self.storage.exists_async(legacy_keys["blog_inline_markdown"])
+            or await self.storage.exists_async(legacy_keys["style_json"])
+            or await self.storage.exists_async(legacy_keys["full_text"])
+        ):
+            return legacy_keys
+        return keys
 
     async def _inline_markdown_images(self, markdown: str, keys: dict[str, str]) -> str:
         replacements: dict[str, str] = {}
@@ -136,7 +170,7 @@ class BlogService:
         image_keys: Optional[dict[str, str]] = None,
         refresh: bool = False,
     ) -> tuple[str, str]:
-        keys = self.keys_for(paper_id)
+        keys = await self._select_read_keys(paper_id)
         inline_key = keys["blog_inline_markdown"]
         if await self.storage.exists_async(inline_key):
             existing = await self.storage.read_text_async(inline_key)
@@ -322,7 +356,7 @@ class BlogService:
         return await self.storage.exists_async(keys["content_json"]) and await self.storage.exists_async(keys["style_json"])
 
     async def ensure_outline_from_existing_ocr(self, paper_id: str, *, job_id: Optional[str] = None, job_type: str = "ppt", meta: Optional[JobMeta] = None) -> None:
-        keys = self.temp_keys_for(job_type, paper_id, job_id) if job_id else self.keys_for(paper_id)
+        keys = self.keys_for(paper_id)
         if await self._prerequisite_artifacts_ready(keys):
             return
         full_text = await self._read_ocr_markdown(keys)
@@ -354,7 +388,7 @@ class BlogService:
         )
 
     async def ensure_prerequisites(self, paper_id: str, *, job_id: Optional[str] = None, job_type: str = "ppt", force_init: bool = False, meta: Optional[JobMeta] = None) -> None:
-        keys = self.temp_keys_for(job_type, paper_id, job_id) if job_id else self.keys_for(paper_id)
+        keys = self.keys_for(paper_id)
         if not force_init and await self._wait_for_prerequisites(keys, timeout_sec=15):
             return
         await self._run_init_style_json(paper_id, keys, return_on_ocr_ready=False, meta=meta)
@@ -407,7 +441,7 @@ class BlogService:
         return markdown, self.settings.blog_llm_model
 
     async def try_get_cached_result(self, paper_id: str) -> Optional[dict]:
-        keys = self.keys_for(paper_id)
+        keys = await self._select_read_keys(paper_id)
         if not await self.storage.exists_async(keys["blog_markdown"]):
             return None
         markdown = await self.storage.read_text_async(keys["blog_markdown"])
@@ -424,23 +458,22 @@ class BlogService:
     async def _run_job(self, meta: JobMeta, *, force: bool = False) -> dict:
         paper_id = self.normalize_paper_id(meta.paper_id)
         final_keys = self.keys_for(paper_id)
-        work_keys = self.temp_keys_for("blog", paper_id, meta.job_id)
         cached = await self.try_get_cached_result(paper_id)
         if cached and not force:
             return cached
 
         try:
-            await self.jobs.update_meta_async(meta, temp_prefix=work_keys["base"])
+            temp_keys = self.temp_keys_for("blog", paper_id, meta.job_id)
+            await self.jobs.update_meta_async(meta, temp_prefix=temp_keys["base"])
             await self.jobs.update_meta_async(meta, status="running", stage="download", message="Downloading paper PDF")
-            pdf = await self._download_pdf(paper_id)
+            await self.ensure_source_pdf(paper_id, final_keys["source_pdf"])
             await self.jobs.update_meta_async(meta, status="running", stage="upload_pdf", message="Uploading paper PDF to S3")
-            await self.storage.upload_bytes_with_retry_async(work_keys["source_pdf"], pdf, "application/pdf")
-            await self._run_init_style_json(paper_id, work_keys, return_on_ocr_ready=True, meta=meta)
+            await self._run_init_style_json(paper_id, final_keys, return_on_ocr_ready=True, meta=meta)
             await self.jobs.update_meta_async(meta, status="running", stage="blog_generate", message="Generating blog markdown")
-            if not await self._wait_for_key(work_keys["full_text"], timeout_sec=30):
-                full_text = await self._read_ocr_markdown(work_keys)
+            if not await self._wait_for_key(final_keys["full_text"], timeout_sec=30):
+                full_text = await self._read_ocr_markdown(final_keys)
             else:
-                full_text = await self.storage.read_text_async(work_keys["full_text"])
+                full_text = await self.storage.read_text_async(final_keys["full_text"])
             if not full_text.strip():
                 raise RuntimeError("OCR markdown is empty")
 
@@ -449,7 +482,7 @@ class BlogService:
             await self._ensure_inline_markdown(
                 paper_id,
                 markdown_raw=markdown,
-                image_keys=work_keys,
+                image_keys=final_keys,
                 refresh=True,
             )
             meta_payload = {
@@ -518,7 +551,7 @@ class BlogService:
             raise HTTPException(status_code=500, detail="Blog result is missing markdown storage key")
         paper_id = meta.result["paper_id"]
         markdown_raw = meta.result.get("markdown")
-        image_keys = self.temp_keys_for(meta.job_type, paper_id, meta.job_id) if meta.temp_prefix else None
+        image_keys = await self._select_read_keys(paper_id)
         _, inline_key = await self._ensure_inline_markdown(
             paper_id,
             markdown_raw=markdown_raw if isinstance(markdown_raw, str) else None,

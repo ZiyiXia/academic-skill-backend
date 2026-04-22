@@ -2,6 +2,9 @@
 logs/
 outputs/
 
+# mac
+.DS_Store
+
 # JSON
 *.json
 *.jsonl

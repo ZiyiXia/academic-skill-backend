@@ -25,7 +25,7 @@ def main() -> int:
     settings = get_settings()
     storage = S3Storage(settings)
     now = datetime.now(timezone.utc)
-    job_keys = storage.list_keys(f"{settings.skill_job_prefix.rstrip('/')}/")
+    job_keys = storage.list_keys("jobs/")
 
     cleaned: list[dict] = []
     for job_key in job_keys:

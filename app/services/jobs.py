@@ -23,6 +23,9 @@ class JobService:
         self.settings = settings
 
     def _job_key(self, job_type: JobType, job_id: str) -> str:
+        return f"jobs/{job_type}/{job_id}/meta.json"
+
+    def _legacy_job_key(self, job_type: JobType, job_id: str) -> str:
         return f"{self.settings.skill_job_prefix}/{job_type}/{job_id}/meta.json"
 
     def create_meta(
@@ -71,15 +74,21 @@ class JobService:
 
     def load_meta(self, job_type: JobType, job_id: str) -> JobMeta:
         key = self._job_key(job_type, job_id)
-        if not self.storage.exists(key):
-            raise HTTPException(status_code=404, detail="Job not found")
-        return JobMeta.model_validate(self.storage.read_json(key))
+        if self.storage.exists(key):
+            return JobMeta.model_validate(self.storage.read_json(key))
+        legacy_key = self._legacy_job_key(job_type, job_id)
+        if self.storage.exists(legacy_key):
+            return JobMeta.model_validate(self.storage.read_json(legacy_key))
+        raise HTTPException(status_code=404, detail="Job not found")
 
     async def load_meta_async(self, job_type: JobType, job_id: str) -> JobMeta:
         key = self._job_key(job_type, job_id)
-        if not await self.storage.exists_async(key):
-            raise HTTPException(status_code=404, detail="Job not found")
-        return JobMeta.model_validate(await self.storage.read_json_async(key))
+        if await self.storage.exists_async(key):
+            return JobMeta.model_validate(await self.storage.read_json_async(key))
+        legacy_key = self._legacy_job_key(job_type, job_id)
+        if await self.storage.exists_async(legacy_key):
+            return JobMeta.model_validate(await self.storage.read_json_async(legacy_key))
+        raise HTTPException(status_code=404, detail="Job not found")
 
     def update_meta(
         self,
