@@ -1,5 +1,6 @@
 import json
 import asyncio
+import logging
 import time
 from collections.abc import Iterable
 from typing import Any, Optional
@@ -10,6 +11,9 @@ from botocore.config import Config
 from botocore.exceptions import ClientError
 
 from app.core.config import Settings
+
+
+logger = logging.getLogger(__name__)
 
 
 class S3Storage:
@@ -65,7 +69,20 @@ class S3Storage:
         return json.loads(self.read_text(key))
 
     def upload_bytes(self, key: str, data: bytes, content_type: str) -> None:
-        self.client.put_object(Bucket=self.bucket, Key=key, Body=data, ContentType=content_type)
+        try:
+            self.client.put_object(Bucket=self.bucket, Key=key, Body=data, ContentType=content_type)
+        except Exception as exc:
+            logger.exception(
+                "S3 put_object failed: endpoint=%s bucket=%s key=%s bytes=%s content_type=%s exc_type=%s exc=%r",
+                getattr(self.client.meta, "endpoint_url", None),
+                self.bucket,
+                key,
+                len(data),
+                content_type,
+                type(exc).__name__,
+                exc,
+            )
+            raise
 
     def upload_bytes_with_retry(
         self,
@@ -123,6 +140,17 @@ class S3Storage:
                 return
             except Exception as exc:
                 last_error = exc
+                logger.warning(
+                    "S3 upload retry: attempt=%s/%s endpoint=%s bucket=%s key=%s bytes=%s exc_type=%s exc=%r",
+                    attempt,
+                    attempts,
+                    getattr(self.client.meta, "endpoint_url", None),
+                    self.bucket,
+                    key,
+                    len(data),
+                    type(exc).__name__,
+                    exc,
+                )
                 if attempt >= attempts:
                     raise
                 await asyncio.sleep(backoff_sec * attempt)

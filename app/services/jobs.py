@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -11,6 +12,9 @@ from fastapi import HTTPException
 from app.core.config import Settings
 from app.schemas.jobs import JobCreatedResponse, JobDetailResponse, JobMeta, JobStatus, JobType
 from app.storage.s3 import S3Storage
+
+
+logger = logging.getLogger(__name__)
 
 
 class JobService:
@@ -173,7 +177,15 @@ class JobService:
                     cleanup_after=self.compute_cleanup_after("succeeded"),
                 )
             except Exception as exc:
-                error_text = str(exc).strip() or f"{type(exc).__name__}: {repr(exc)}"
+                logger.exception(
+                    "Job failed: job_type=%s job_id=%s paper_id=%s stage=%s",
+                    current.job_type,
+                    current.job_id,
+                    current.paper_id,
+                    current.stage,
+                )
+                error_detail = str(exc).strip()
+                error_text = f"{type(exc).__name__}: {error_detail or repr(exc)}"
                 await self.update_meta_async(
                     current,
                     status="failed",
