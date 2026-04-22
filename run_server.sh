@@ -1,5 +1,8 @@
 #!/bin/bash
 
+### 当前由systemd-run --user --unit=academic-skill /home/search_agent/github-repos/ziyi/academic-skill-backend/run_server.sh启动
+### 通过systemctl --user status academic-skill.service检查状态
+
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -14,7 +17,10 @@ TIMESTAMP="$(date +"%Y%m%d_%H%M%S")"
 LOG_FILE="$LOG_DIR/server_${TIMESTAMP}.log"
 LATEST_LOG="$LOG_DIR/latest.log"
 
-if [ -f ".venv/bin/python" ]; then
+CONDA_ENV_PATH="/home/search_agent/Envs/academic_skill"
+if [ -f "$CONDA_ENV_PATH/bin/python" ]; then
+  PYTHON_BIN="$CONDA_ENV_PATH/bin/python"
+elif [ -f ".venv/bin/python" ]; then
   PYTHON_BIN=".venv/bin/python"
 elif command -v python >/dev/null 2>&1; then
   PYTHON_BIN="$(command -v python)"
