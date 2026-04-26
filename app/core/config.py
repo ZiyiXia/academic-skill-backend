@@ -38,6 +38,12 @@ class Settings(BaseModel):
     research_llm_model: str
     slides_default_count: int
     slides_default_lang: str
+    trending_api_url: str
+    trending_limit: int
+    trending_top_artifact_count: int
+    trending_cover_subdir: str
+    trending_cover_dpi: int
+    trending_prewarm_concurrency: int
 
 
 def _env(name: str, default: Optional[str] = None) -> str:
@@ -83,4 +89,10 @@ def get_settings() -> Settings:
         research_llm_model=_env("RESEARCH_LLM_MODEL", os.getenv("BLOG_LLM_MODEL", "gpt-4.1")),
         slides_default_count=int(_env("SLIDES_DEFAULT_COUNT", "5")),
         slides_default_lang=_env("SLIDES_DEFAULT_LANG", "en"),
+        trending_api_url=_env("TRENDING_API_URL", "https://api.rag.ac.cn/trending_arxiv_papers/api/trending"),
+        trending_limit=int(_env("TRENDING_LIMIT", "30")),
+        trending_top_artifact_count=int(_env("TRENDING_TOP_ARTIFACT_COUNT", "6")),
+        trending_cover_subdir=_env("TRENDING_COVER_SUBDIR", "cover"),
+        trending_cover_dpi=int(_env("TRENDING_COVER_DPI", "160")),
+        trending_prewarm_concurrency=int(_env("TRENDING_PREWARM_CONCURRENCY", "3")),
     )

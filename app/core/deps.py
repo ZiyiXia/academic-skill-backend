@@ -6,6 +6,7 @@ from app.services.jobs import JobService
 from app.services.ppt import PptService
 from app.services.research import ResearchService
 from app.services.search import SearchService
+from app.services.trending import TrendingService
 from app.storage.s3 import S3Storage
 
 
@@ -37,3 +38,13 @@ def get_blog_service() -> BlogService:
 @lru_cache
 def get_ppt_service() -> PptService:
     return PptService(get_settings(), get_storage(), get_job_service())
+
+
+@lru_cache
+def get_trending_service() -> TrendingService:
+    return TrendingService(
+        get_settings(),
+        get_storage(),
+        get_blog_service(),
+        get_ppt_service(),
+    )
