@@ -91,7 +91,7 @@ def get_settings() -> Settings:
         slides_default_lang=_env("SLIDES_DEFAULT_LANG", "en"),
         trending_api_url=_env("TRENDING_API_URL", "https://api.rag.ac.cn/trending_arxiv_papers/api/trending"),
         trending_limit=int(_env("TRENDING_LIMIT", "30")),
-        trending_top_artifact_count=int(_env("TRENDING_TOP_ARTIFACT_COUNT", "6")),
+        trending_top_artifact_count=int(_env("TRENDING_TOP_ARTIFACT_COUNT", "3")),
         trending_cover_subdir=_env("TRENDING_COVER_SUBDIR", "cover"),
         trending_cover_dpi=int(_env("TRENDING_COVER_DPI", "160")),
         trending_prewarm_concurrency=int(_env("TRENDING_PREWARM_CONCURRENCY", "3")),

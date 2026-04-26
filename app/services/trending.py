@@ -3,9 +3,10 @@ from __future__ import annotations
 import asyncio
 import logging
 import tempfile
+import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 import httpx
 from fastapi import HTTPException
@@ -133,49 +134,106 @@ class TrendingService:
         top_artifact_count: Optional[int] = None,
         slide_count: Optional[int] = None,
         language: Optional[str] = None,
+        progress: Optional[Callable[[str], None]] = None,
     ) -> TrendingPrewarmResponse:
+        started_at = time.perf_counter()
         paper_ids = await self.fetch_trending_paper_ids(limit=limit)
         top_count = top_artifact_count
         if top_count is None:
             top_count = self.settings.trending_top_artifact_count
         top_count = max(0, min(top_count, len(paper_ids)))
-        semaphore = asyncio.Semaphore(max(1, self.settings.trending_prewarm_concurrency))
+        concurrency = max(1, self.settings.trending_prewarm_concurrency)
+        semaphore = asyncio.Semaphore(concurrency)
+        cover_done = 0
 
-        async def run_one(index: int, paper_id: str) -> TrendingPaperArtifactStatus:
+        def emit(message: str) -> None:
+            if progress:
+                progress(message)
+
+        emit(
+            f"fetched {len(paper_ids)} trending papers; "
+            f"covers={len(paper_ids)}, blog/ppt top={top_count}, concurrency={concurrency}"
+        )
+
+        statuses = [
+            TrendingPaperArtifactStatus(paper_id=paper_id, rank=index + 1)
+            for index, paper_id in enumerate(paper_ids)
+        ]
+
+        async def run_cover(index: int, paper_id: str) -> None:
+            nonlocal cover_done
             async with semaphore:
-                status = TrendingPaperArtifactStatus(paper_id=paper_id, rank=index + 1)
+                status = statuses[index]
                 try:
+                    cover_item_started = time.perf_counter()
+                    emit(f"[{index + 1}/{len(paper_ids)}] cover start {paper_id}")
                     status.cover_s3_key = await self.ensure_cover(paper_id, force=force)
                     status.cover_ready = True
-                    if index < top_count:
-                        blog_job = await self.blogs.create_job(
-                            CreateBlogJobRequest(paper_id=paper_id, force=force)
-                        )
-                        status.blog_status = await self._wait_for_blog(blog_job)
-
-                        ppt_job = await self.ppts.create_job(
-                            CreatePptJobRequest(
-                                paper_id=paper_id,
-                                force=force,
-                                language=language,
-                                slide_count=slide_count,
-                            )
-                        )
-                        status.ppt_status = await self._wait_for_ppt(ppt_job)
+                    cover_done += 1
+                    emit(
+                        f"[{index + 1}/{len(paper_ids)}] cover done {paper_id} "
+                        f"({time.perf_counter() - cover_item_started:.1f}s, {cover_done}/{len(paper_ids)})"
+                    )
                 except Exception as exc:
                     logger.exception("Trending prewarm failed: paper_id=%s", paper_id)
                     status.error = str(exc)
-                return status
+                    emit(f"[{index + 1}/{len(paper_ids)}] cover failed {paper_id}: {exc}")
 
-        papers = await asyncio.gather(
-            *(run_one(index, paper_id) for index, paper_id in enumerate(paper_ids))
+        cover_started_at = time.perf_counter()
+        await asyncio.gather(
+            *(run_cover(index, paper_id) for index, paper_id in enumerate(paper_ids))
         )
+        cover_elapsed = time.perf_counter() - cover_started_at
+        emit(
+            f"cover summary: ready={sum(1 for paper in statuses if paper.cover_ready)}/{len(statuses)}, "
+            f"elapsed={cover_elapsed:.1f}s"
+        )
+
+        async def run_artifacts(index: int, paper_id: str) -> None:
+            async with semaphore:
+                status = statuses[index]
+                try:
+                    blog_started = time.perf_counter()
+                    emit(f"[{index + 1}/{top_count}] blog start {paper_id}")
+                    blog_job = await self.blogs.create_job(
+                        CreateBlogJobRequest(paper_id=paper_id, force=force)
+                    )
+                    status.blog_status = await self._wait_for_blog(blog_job)
+                    emit(
+                        f"[{index + 1}/{top_count}] blog {status.blog_status} {paper_id} "
+                        f"({time.perf_counter() - blog_started:.1f}s)"
+                    )
+
+                    ppt_started = time.perf_counter()
+                    emit(f"[{index + 1}/{top_count}] ppt start {paper_id}")
+                    ppt_job = await self.ppts.create_job(
+                        CreatePptJobRequest(
+                            paper_id=paper_id,
+                            force=force,
+                            language=language,
+                            slide_count=slide_count,
+                        )
+                    )
+                    status.ppt_status = await self._wait_for_ppt(ppt_job)
+                    emit(
+                        f"[{index + 1}/{top_count}] ppt {status.ppt_status} {paper_id} "
+                        f"({time.perf_counter() - ppt_started:.1f}s)"
+                    )
+                except Exception as exc:
+                    logger.exception("Trending artifact prewarm failed: paper_id=%s", paper_id)
+                    status.error = str(exc)
+                    emit(f"[{index + 1}/{top_count}] artifact failed {paper_id}: {exc}")
+
+        await asyncio.gather(
+            *(run_artifacts(index, paper_id) for index, paper_id in enumerate(paper_ids[:top_count]))
+        )
+        emit(f"prewarm done: elapsed={time.perf_counter() - started_at:.1f}s")
         return TrendingPrewarmResponse(
             status="ok",
             generated_at=datetime.now(timezone.utc),
             total_papers=len(paper_ids),
             top_artifact_count=top_count,
-            papers=list(papers),
+            papers=statuses,
         )
 
     async def _wait_for_blog(self, created: JobCreatedResponse) -> str:
