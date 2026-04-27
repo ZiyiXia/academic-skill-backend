@@ -27,6 +27,13 @@ async def prewarm_trending(
     )
 
 
+@router.get("/current")
+async def get_current_trending(
+    service: TrendingService = Depends(get_trending_service),
+) -> dict:
+    return await service.get_current_manifest()
+
+
 @router.get("/covers/{paper_id}/url", response_model=TrendingCoverUrlResponse)
 async def get_trending_cover_url(
     paper_id: str,

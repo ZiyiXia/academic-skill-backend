@@ -463,6 +463,7 @@ curl -X POST http://127.0.0.1:8010/v1/ppt/jobs \
 - PPT job 成功后会通过 `/result` 返回的临时下载链接拉取 `slides.pdf` 到本地
 - Trending 预热：`python scripts/prewarm_trending.py --limit 30 --top-artifact-count 3`
   - 所有 trending paper 会生成封面：`papers/{paper_id}/cover/page_1.jpg`
+  - 所有封面完成后会发布榜单：`trending/{date}.json` 和 `trending/current.json`
   - 前 3 篇会复用现有 blog/PPT job 链路，产物仍写入 `papers/{paper_id}/blog/blog_inline.md` 和 `papers/{paper_id}/slides/slides.pdf`
   - 定时部署时建议在上游 trending API 每日刷新后延迟几分钟由 cron 调用该脚本
 - 清理过期 job 临时产物：`python scripts/cleanup_job_artifacts.py`

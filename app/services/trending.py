@@ -39,7 +39,18 @@ class TrendingService:
         keys = self.blogs.keys_for(paper_id)
         return f"{keys['base']}/{self.settings.trending_cover_subdir.strip('/')}/page_1.jpg"
 
+    def daily_manifest_key_for(self, now: Optional[datetime] = None) -> str:
+        current = now or datetime.now(timezone.utc)
+        return f"trending/{current.strftime('%Y-%m-%d')}.json"
+
+    def current_manifest_key(self) -> str:
+        return "trending/current.json"
+
     async def fetch_trending_paper_ids(self, *, limit: Optional[int] = None) -> list[str]:
+        papers = await self.fetch_trending_raw(limit=limit)
+        return [paper["paper_id"] for paper in papers]
+
+    async def fetch_trending_raw(self, *, limit: Optional[int] = None) -> list[dict[str, Any]]:
         max_items = limit or self.settings.trending_limit
         async with httpx.AsyncClient(timeout=30.0) as client:
             for days in (7, 14, 30):
@@ -57,12 +68,12 @@ class TrendingService:
                 payload = response.json()
                 papers = payload.get("data", {}).get("papers")
                 if isinstance(papers, list) and papers:
-                    return self._extract_paper_ids(papers)[:max_items]
+                    return self._normalize_trending_raw(papers)[:max_items]
         return []
 
-    def _extract_paper_ids(self, papers: list[Any]) -> list[str]:
+    def _normalize_trending_raw(self, papers: list[Any]) -> list[dict[str, Any]]:
         seen: set[str] = set()
-        result: list[str] = []
+        result: list[dict[str, Any]] = []
         for paper in papers:
             if not isinstance(paper, dict):
                 continue
@@ -73,8 +84,163 @@ class TrendingService:
             if paper_id in seen:
                 continue
             seen.add(paper_id)
-            result.append(paper_id)
+            result.append({**paper, "paper_id": paper_id})
         return result
+
+    async def fetch_paper_metadata(self, paper_id: str) -> dict[str, Any] | None:
+        params = {
+            "arxiv_id": paper_id,
+            "type": "head",
+            "token": self.settings.rag_api_token,
+        }
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            try:
+                response = await client.get(
+                    f"{self.settings.rag_api_base_url.rstrip('/')}/arxiv/",
+                    params=params,
+                )
+                if response.status_code >= 400:
+                    return None
+                payload = response.json()
+                if isinstance(payload, dict):
+                    detail = str(payload.get("detail") or "").lower()
+                    if "arxiv paper not found" in detail:
+                        return None
+                    return payload
+            except Exception:
+                logger.exception("Trending metadata fetch failed: paper_id=%s", paper_id)
+        return None
+
+    def _extract_authors(self, meta: dict[str, Any]) -> list[dict[str, Any]]:
+        raw_authors = meta.get("authors")
+        if isinstance(raw_authors, str):
+            return [{"name": name.strip(), "orgs": []} for name in raw_authors.split(",") if name.strip()]
+        if not isinstance(raw_authors, list):
+            raw_authors = meta.get("author") if isinstance(meta.get("author"), list) else []
+        authors = []
+        for author in raw_authors:
+            if isinstance(author, str) and author.strip():
+                authors.append({"name": author.strip(), "orgs": []})
+            elif isinstance(author, dict) and isinstance(author.get("name"), str):
+                authors.append({"name": author["name"], "orgs": author.get("orgs") or []})
+        return authors
+
+    def _extract_recommended_by(self, raw: dict[str, Any]) -> list[dict[str, str | None]]:
+        candidates = [
+            raw.get("recommended_by"),
+            raw.get("recommenders"),
+            raw.get("kols"),
+            raw.get("top_kols"),
+            raw.get("mentioned_by"),
+            raw.get("users"),
+            raw.get("top_users"),
+            raw.get("mentions"),
+            raw.get("timeline"),
+        ]
+        found: dict[str, dict[str, str | None]] = {}
+
+        def visit(value: Any) -> None:
+            if not value:
+                return
+            if isinstance(value, list):
+                for item in value:
+                    visit(item)
+                return
+            if isinstance(value, str):
+                handle = value.strip().lstrip("@")
+                if handle:
+                    found[f"@{handle}"] = {"handle": f"@{handle}", "url": f"https://x.com/{handle}"}
+                return
+            if not isinstance(value, dict):
+                return
+            raw_handle = (
+                value.get("handle")
+                or value.get("username")
+                or value.get("screen_name")
+                or value.get("user_handle")
+                or value.get("twitter_handle")
+                or value.get("x_handle")
+            )
+            raw_url = value.get("url") or value.get("profile_url") or value.get("twitter_url") or value.get("x_url")
+            if isinstance(raw_handle, str) and raw_handle.strip():
+                normalized = raw_handle.strip().lstrip("@")
+                found[f"@{normalized}"] = {
+                    "handle": f"@{normalized}",
+                    "url": raw_url if isinstance(raw_url, str) and raw_url.strip() else f"https://x.com/{normalized}",
+                }
+            for nested in value.values():
+                if isinstance(nested, list):
+                    visit(nested)
+
+        for candidate in candidates:
+            visit(candidate)
+        return list(found.values())[:3]
+
+    async def build_published_papers(
+        self,
+        raw_papers: list[dict[str, Any]],
+        statuses: list[TrendingPaperArtifactStatus],
+    ) -> list[dict[str, Any]]:
+        status_by_id = {status.paper_id: status for status in statuses}
+        metadata = await asyncio.gather(
+            *(self.fetch_paper_metadata(paper["paper_id"]) for paper in raw_papers)
+        )
+        published: list[dict[str, Any]] = []
+        for raw, meta in zip(raw_papers, metadata):
+            if not meta:
+                continue
+            paper_id = raw["paper_id"]
+            status = status_by_id.get(paper_id)
+            categories = meta.get("categories") if isinstance(meta.get("categories"), list) else []
+            timeline = raw.get("timeline") if isinstance(raw.get("timeline"), dict) else {}
+            published.append(
+                {
+                    "arxiv_id": paper_id,
+                    "title": meta.get("title") or f"arXiv:{paper_id}",
+                    "abstract": meta.get("abstract") or "",
+                    "authors": self._extract_authors(meta),
+                    "score": 0,
+                    "url": raw.get("arxiv_url") or f"https://arxiv.org/abs/{paper_id}",
+                    "date": meta.get("publish_at") or timeline.get("latest_mention"),
+                    "rank": len(published) + 1,
+                    "stats": raw.get("stats") or {},
+                    "categories": categories,
+                    "tldr": meta.get("tldr"),
+                    "github_url": meta.get("github_url"),
+                    "venue": meta.get("venue") or meta.get("journal_name"),
+                    "citations": meta.get("citations"),
+                    "coverImageUrl": None,
+                    "cover_s3_key": status.cover_s3_key if status else None,
+                    "recommendedBy": self._extract_recommended_by(raw),
+                }
+            )
+        return published
+
+    async def publish_trending_manifest(
+        self,
+        raw_papers: list[dict[str, Any]],
+        statuses: list[TrendingPaperArtifactStatus],
+        *,
+        cover_elapsed_seconds: float,
+    ) -> None:
+        now = datetime.now(timezone.utc)
+        papers = await self.build_published_papers(raw_papers, statuses)
+        manifest = {
+            "version": 1,
+            "published_at": now.isoformat(),
+            "cover_elapsed_seconds": round(cover_elapsed_seconds, 3),
+            "total_papers": len(papers),
+            "papers": papers,
+        }
+        daily_key = self.daily_manifest_key_for(now)
+        await self.storage.write_json_async(daily_key, manifest)
+        await self.storage.write_json_async(self.current_manifest_key(), manifest)
+
+    async def get_current_manifest(self) -> dict[str, Any]:
+        key = self.current_manifest_key()
+        if not await self.storage.exists_async(key):
+            raise HTTPException(status_code=404, detail="Trending manifest is not published")
+        return await self.storage.read_json_async(key)
 
     async def ensure_cover(self, paper_id: str, *, force: bool = False) -> str:
         normalized = self.blogs.normalize_paper_id(paper_id)
@@ -137,7 +303,8 @@ class TrendingService:
         progress: Optional[Callable[[str], None]] = None,
     ) -> TrendingPrewarmResponse:
         started_at = time.perf_counter()
-        paper_ids = await self.fetch_trending_paper_ids(limit=limit)
+        raw_papers = await self.fetch_trending_raw(limit=limit)
+        paper_ids = [paper["paper_id"] for paper in raw_papers]
         top_count = top_artifact_count
         if top_count is None:
             top_count = self.settings.trending_top_artifact_count
@@ -188,6 +355,15 @@ class TrendingService:
             f"cover summary: ready={sum(1 for paper in statuses if paper.cover_ready)}/{len(statuses)}, "
             f"elapsed={cover_elapsed:.1f}s"
         )
+        if statuses and all(status.cover_ready for status in statuses):
+            await self.publish_trending_manifest(
+                raw_papers,
+                statuses,
+                cover_elapsed_seconds=cover_elapsed,
+            )
+            emit(f"published trending manifest: {self.current_manifest_key()}")
+        else:
+            emit("skipped trending manifest publish: not all covers are ready")
 
         async def run_artifacts(index: int, paper_id: str) -> None:
             async with semaphore:
